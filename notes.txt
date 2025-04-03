@@ -1,0 +1,10 @@
+git clone https://github.com/leahphw/babylm.git
+git switch -c babyLM_code --track origin/babyLM_code
+
+# To sync back
+git bundle create repo.bundle --all
+rsync spydur:/home/jstipl/code/babylm/repo.bundle /tmp/
+git remote set-url origin git@github.com:leahphw/babylm.git
+git push origin --all
+
+python train.py --config ./config/llama-16M.yaml
