@@ -133,11 +133,11 @@ trainer = Trainer(
 
 
 if __name__ == "__main__":
-
-    if config['logging']['wandb']:
-        import wandb
-        wandb.login()
-        wandb.init(project= config['logging']['project'], name=config['model']['name'], config=config)
+    # This is not installed in (base)
+    # if config['logging']['wandb']:
+    #     import wandb
+    #     wandb.login()
+    #     wandb.init(project= config['logging']['project'], name=config['model']['name'], config=config)
 
     trainer.train()
     trainer.save_model(output_dir)

@@ -1,7 +1,7 @@
 data:
-  tokenizer_path: "./models/gpt-clean-16000.json"
-  train_path: "./data/babylm_10M_clean"
-  eval_path: "./data/babylm_dev_clean"
+  tokenizer_path: "/scratch/jstipl/models/gpt-clean-16000.json"
+  train_path: "/scratch/jstipl/data/train_10M_clean"
+  eval_path: "/scratch/jstipl/data/dev_clean"
   seq_length: 128
   eval_samples: 8192
 
