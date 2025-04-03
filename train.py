@@ -1,3 +1,6 @@
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1"
+import torch
 from transformers import (
     GPT2Config, GPT2LMHeadModel, 
     LlamaConfig, LlamaForCausalLM, 
@@ -123,6 +126,13 @@ training_args = TrainingArguments(
     torch_compile = config['training'].get('torch_compile', False),
 )
 
+# Enable multi-GPU
+# if torch.cuda.device_count() > 1:
+#     print(f"Using {torch.cuda.device_count()} GPUs")
+#     model = torch.nn.DataParallel(model)
+# Use: torchrun --nproc_per_node=2 train.py
+# This uses the 2 GPUs fully
+
 trainer = Trainer(
     model=model,
     args=training_args,
@@ -139,6 +149,23 @@ if __name__ == "__main__":
     #     wandb.login()
     #     wandb.init(project= config['logging']['project'], name=config['model']['name'], config=config)
 
+
+    
+    if torch.cuda.is_available():
+        print(f"Number of GPUs: {torch.cuda.device_count()}")
+        for i in range(torch.cuda.device_count()):
+            print(f"GPU {i}: {torch.cuda.get_device_name(i)}")
+        
+        print("To use all GPUs run: torchrun --nproc_per_node=2 train.py")
+    else:
+        print("No GPU found, using CPU.")
+        print("Exiting")
+        exit(1)
+
+    assert torch.cuda.device_count() == 2, "Using too many GPUs, professor will not be happy"
+
+
+    print(f"Trainer is using device: {trainer.args.device}")
     trainer.train()
     trainer.save_model(output_dir)
     tokenizer.save_pretrained(output_dir)
