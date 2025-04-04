@@ -15,6 +15,9 @@ git remote set-url origin git@github.com:leahphw/babylm.git
 git push origin --all
 git log
 
+# To sync forward (local to spydur)
+rsync -r $(pwd) spydur:/home/jstipl/code/
+
 
 python train.py --config ./config/llama-16M.yaml
 
@@ -34,3 +37,15 @@ nvidia-smi
 
 # This is faster, it uses the 2 GPUs fully
 torchrun --nproc_per_node=2 train.py
+
+sbatch train.py.slurm
+
+export LAST_JOB_ID=$(sbatch train.py.slurm | cut -d" " -f 4)
+tail -f slurm-$LAST_JOB_ID.out
+
+
+tail -f slurm-207326.out
+
+(base) [jstipl@spydur]: squeue | grep NLP
+            202426       NLP jstipl_t   jstipl  R       0:17      1 spdr18
+scancel <job_id>
