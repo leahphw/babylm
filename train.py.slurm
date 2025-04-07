@@ -14,7 +14,7 @@
 # This is one hour 30 seconds. Adjust accordingly.
 #SBATCH --time=01:00:30
 # Change /netid/ to *your* netid.
-#SBATCH --mail-user=jan.stipl@richmond.edu
+#SBATCH --mail-user=kasym.manatayev@richmond.edu
 #SBATCH --mail-type=TIME_LIMIT_90
 #####
 #BEGIN — send mail when the job begins.
@@ -89,7 +89,7 @@ echo "Running python script"
 # echo "Run eval script"
 # /usr/bin/time -v ./eval_blimp.sh distilbert/distilgpt2
 
-/usr/bin/time -v torchrun --nproc_per_node=2 train.py
+/usr/bin/time -v torchrun --nproc_per_node=2 distill-ensemble-pretraining-baby-llama.py
 
 # Print the ending date/time
 date

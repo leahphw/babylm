@@ -19,7 +19,7 @@ from babylm_dataset import BabylmDataset
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--config", type=str, default="./config/llama-16M.yaml", help="Configuration file path")
+parser.add_argument("--config", type=str, default="./config/gpt-97M.yaml", help="Configuration file path")
 parser.add_argument("--lr", type=float, default=None, help="Learning rate")
 parser.add_argument("--model_name", type=str, default=None, help="Model name")
 args = parser.parse_args()

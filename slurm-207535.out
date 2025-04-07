@@ -1,0 +1,128 @@
+Mon Apr  7 18:03:03 EDT 2025
+I ran on:
+SLURM_NODELIST=spdr18
+Moving to /home/km3nc/babylm
+setting up conda
+no change     /usr/local/sw/anaconda/anaconda3/condabin/conda
+no change     /usr/local/sw/anaconda/anaconda3/bin/conda
+no change     /usr/local/sw/anaconda/anaconda3/bin/conda-env
+no change     /usr/local/sw/anaconda/anaconda3/bin/activate
+no change     /usr/local/sw/anaconda/anaconda3/bin/deactivate
+no change     /usr/local/sw/anaconda/anaconda3/etc/profile.d/conda.sh
+no change     /usr/local/sw/anaconda/anaconda3/etc/fish/conf.d/conda.fish
+no change     /usr/local/sw/anaconda/anaconda3/shell/condabin/Conda.psm1
+no change     /usr/local/sw/anaconda/anaconda3/shell/condabin/conda-hook.ps1
+no change     /usr/local/sw/anaconda/anaconda3/lib/python3.9/site-packages/xontrib/conda.xsh
+no change     /usr/local/sw/anaconda/anaconda3/etc/profile.d/conda.csh
+no change     /home/km3nc/.bashrc
+No action taken.
+checking pip installs
+WARNING: No metadata found in /usr/local/sw/anaconda/anaconda3/lib/python3.9/site-packages
+minicons==0.3.22
+Running python script
+/usr/local/sw/anaconda/anaconda3/lib/python3.9/site-packages/torch/utils/_pytree.py:185: FutureWarning: optree is installed but the version is too old to support PyTorch Dynamo in C++ pytree. C++ pytree support is disabled. Please consider upgrading optree using `python3 -m pip install --upgrade 'optree>=0.13.0'`.
+  warnings.warn(
+W0407 18:03:07.283127 2653528 site-packages/torch/distributed/run.py:792] 
+W0407 18:03:07.283127 2653528 site-packages/torch/distributed/run.py:792] *****************************************
+W0407 18:03:07.283127 2653528 site-packages/torch/distributed/run.py:792] Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+W0407 18:03:07.283127 2653528 site-packages/torch/distributed/run.py:792] *****************************************
+/usr/local/sw/anaconda/anaconda3/lib/python3.9/site-packages/torch/utils/_pytree.py:185: FutureWarning: optree is installed but the version is too old to support PyTorch Dynamo in C++ pytree. C++ pytree support is disabled. Please consider upgrading optree using `python3 -m pip install --upgrade 'optree>=0.13.0'`.
+  warnings.warn(
+/usr/local/sw/anaconda/anaconda3/lib/python3.9/site-packages/torch/utils/_pytree.py:185: FutureWarning: optree is installed but the version is too old to support PyTorch Dynamo in C++ pytree. C++ pytree support is disabled. Please consider upgrading optree using `python3 -m pip install --upgrade 'optree>=0.13.0'`.
+  warnings.warn(
+2025-04-07 18:03:10.393253: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2025-04-07 18:03:10.394071: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2025-04-07 18:03:10.429101: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2025-04-07 18:03:10.429132: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2025-04-07 18:03:10.429416: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2025-04-07 18:03:10.429441: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2025-04-07 18:03:10.430169: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2025-04-07 18:03:10.430407: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2025-04-07 18:03:10.435537: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2025-04-07 18:03:10.435670: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2025-04-07 18:03:11.557943: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+2025-04-07 18:03:11.557942: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+/usr/local/sw/anaconda/anaconda3/lib/python3.9/site-packages/transformers/tokenization_utils_base.py:1617: FutureWarning: `clean_up_tokenization_spaces` was not set. It will be set to `True` by default. This behavior will be deprecated in transformers v4.45, and will be then set to `False` by default. For more details check this issue: https://github.com/huggingface/transformers/issues/31884
+  warnings.warn(
+/usr/local/sw/anaconda/anaconda3/lib/python3.9/site-packages/transformers/tokenization_utils_base.py:1617: FutureWarning: `clean_up_tokenization_spaces` was not set. It will be set to `True` by default. This behavior will be deprecated in transformers v4.45, and will be then set to `False` by default. For more details check this issue: https://github.com/huggingface/transformers/issues/31884
+  warnings.warn(
+Loading data from /scratch/jstipl/data/train_10M_clean/tokenized_GPT2TokenizerFast_16000.ptLoading data from /scratch/jstipl/data/train_10M_clean/tokenized_GPT2TokenizerFast_16000.pt
+
+Loading data from /scratch/jstipl/data/dev_clean/tokenized_GPT2TokenizerFast_16000.pt
+Loading data from /scratch/jstipl/data/dev_clean/tokenized_GPT2TokenizerFast_16000.pt
+model num parameters: student = 58343936
+model num parameters: teacher1 = 16584960
+model num parameters: teacher2 = 97540608
+Traceback (most recent call last):
+  File "/home/km3nc/babylm/distill-ensemble-pretraining-baby-llama.py", line 151, in <module>
+    wandb.login()
+NameError: name 'wandb' is not defined
+model num parameters: student = 58343936
+model num parameters: teacher1 = 16584960
+model num parameters: teacher2 = 97540608
+Traceback (most recent call last):
+  File "/home/km3nc/babylm/distill-ensemble-pretraining-baby-llama.py", line 151, in <module>
+    wandb.login()
+NameError: name 'wandb' is not defined
+E0407 18:03:16.223924 2653528 site-packages/torch/distributed/elastic/multiprocessing/api.py:869] failed (exitcode: 1) local_rank: 0 (pid: 2653542) of binary: /usr/local/sw/anaconda/anaconda3/bin/python
+Traceback (most recent call last):
+  File "/usr/local/sw/anaconda/anaconda3/bin/torchrun", line 8, in <module>
+    sys.exit(main())
+  File "/usr/local/sw/anaconda/anaconda3/lib/python3.9/site-packages/torch/distributed/elastic/multiprocessing/errors/__init__.py", line 355, in wrapper
+    return f(*args, **kwargs)
+  File "/usr/local/sw/anaconda/anaconda3/lib/python3.9/site-packages/torch/distributed/run.py", line 918, in main
+    run(args)
+  File "/usr/local/sw/anaconda/anaconda3/lib/python3.9/site-packages/torch/distributed/run.py", line 909, in run
+    elastic_launch(
+  File "/usr/local/sw/anaconda/anaconda3/lib/python3.9/site-packages/torch/distributed/launcher/api.py", line 138, in __call__
+    return launch_agent(self._config, self._entrypoint, list(args))
+  File "/usr/local/sw/anaconda/anaconda3/lib/python3.9/site-packages/torch/distributed/launcher/api.py", line 269, in launch_agent
+    raise ChildFailedError(
+torch.distributed.elastic.multiprocessing.errors.ChildFailedError: 
+============================================================
+distill-ensemble-pretraining-baby-llama.py FAILED
+------------------------------------------------------------
+Failures:
+[1]:
+  time      : 2025-04-07_18:03:16
+  host      : spdr18.cluster
+  rank      : 1 (local_rank: 1)
+  exitcode  : 1 (pid: 2653543)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+------------------------------------------------------------
+Root Cause (first observed failure):
+[0]:
+  time      : 2025-04-07_18:03:16
+  host      : spdr18.cluster
+  rank      : 0 (local_rank: 0)
+  exitcode  : 1 (pid: 2653542)
+  error_file: <N/A>
+  traceback : To enable traceback see: https://pytorch.org/docs/stable/elastic/errors.html
+============================================================
+Command exited with non-zero status 1
+	Command being timed: "torchrun --nproc_per_node=2 distill-ensemble-pretraining-baby-llama.py"
+	User time (seconds): 14.02
+	System time (seconds): 3.22
+	Percent of CPU this job got: 157%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:10.95
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 1687540
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 702
+	Minor (reclaiming a frame) page faults: 515502
+	Voluntary context switches: 52295
+	Involuntary context switches: 176
+	Swaps: 0
+	File system inputs: 16
+	File system outputs: 96
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 1
