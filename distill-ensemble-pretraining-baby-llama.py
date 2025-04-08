@@ -164,7 +164,7 @@ training_args = DistillationTrainingArguments(
     gradient_accumulation_steps=1,
     per_device_train_batch_size=BATCH_SIZE,
     save_total_limit=1,  # Set to zero to avoid saving
-    report_to="wandb",
+    # report_to="wandb",
     warmup_steps=200, 
     lr_scheduler_type="cosine",
     learning_rate=LR,
@@ -188,7 +188,21 @@ trainer = DistillationTrainer(
 
     )
 
+if torch.cuda.is_available():
+    print(f"Number of GPUs: {torch.cuda.device_count()}")
+    for i in range(torch.cuda.device_count()):
+        print(f"GPU {i}: {torch.cuda.get_device_name(i)}")
+        
+    print("To use all GPUs run: torchrun --nproc_per_node=2 train.py")
+else:
+    print("No GPU found, using CPU.")
+    print("Exiting")
+    exit(1)
 
+assert torch.cuda.device_count() == 2, "Using too many GPUs, professor will not be happy"
+
+
+print(f"Trainer is using device: {trainer.args.device}")
 trainer.train()
 
 

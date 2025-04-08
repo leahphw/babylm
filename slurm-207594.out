@@ -1,0 +1,159 @@
+Mon Apr  7 21:47:18 EDT 2025
+I ran on:
+SLURM_NODELIST=spdr18
+cd to target directory
+setting up conda
+no change     /usr/local/sw/anaconda/anaconda3/condabin/conda
+no change     /usr/local/sw/anaconda/anaconda3/bin/conda
+no change     /usr/local/sw/anaconda/anaconda3/bin/conda-env
+no change     /usr/local/sw/anaconda/anaconda3/bin/activate
+no change     /usr/local/sw/anaconda/anaconda3/bin/deactivate
+no change     /usr/local/sw/anaconda/anaconda3/etc/profile.d/conda.sh
+no change     /usr/local/sw/anaconda/anaconda3/etc/fish/conf.d/conda.fish
+no change     /usr/local/sw/anaconda/anaconda3/shell/condabin/Conda.psm1
+no change     /usr/local/sw/anaconda/anaconda3/shell/condabin/conda-hook.ps1
+no change     /usr/local/sw/anaconda/anaconda3/lib/python3.9/site-packages/xontrib/conda.xsh
+no change     /usr/local/sw/anaconda/anaconda3/etc/profile.d/conda.csh
+no change     /home/km3nc/.bashrc
+No action taken.
+checking pip installs
+WARNING: No metadata found in /usr/local/sw/anaconda/anaconda3/lib/python3.9/site-packages
+minicons==0.3.22
+Run eval script
+/usr/local/sw/anaconda/anaconda3/lib/python3.9/site-packages/torch/utils/_pytree.py:185: FutureWarning: optree is installed but the version is too old to support PyTorch Dynamo in C++ pytree. C++ pytree support is disabled. Please consider upgrading optree using `python3 -m pip install --upgrade 'optree>=0.13.0'`.
+  warnings.warn(
+2025-04-07 21:47:23.090344: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2025-04-07 21:47:23.127631: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2025-04-07 21:47:23.127672: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2025-04-07 21:47:23.128678: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2025-04-07 21:47:23.134039: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2025-04-07 21:47:24.145392: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+2025-04-07:21:48:11,117 WARNING  [loading.py:546] Using the latest cached version of the module from /scratch/cfinegan/hf_cache/modules/evaluate_modules/metrics/evaluate-metric--exact_match/9d3b67e0c429cd7460b2b05aab53419b48eea369b73e1d9f185a56ca90c373d4 (last modified on Tue Apr  1 16:07:14 2025) since it couldn't be found locally at evaluate-metric--exact_match, or remotely on the Hugging Face Hub.
+2025-04-07:21:48:11,249 INFO     [__main__.py:263] Verbosity set to INFO
+2025-04-07:21:48:17,087 INFO     [__main__.py:349] Selected Tasks: ['blimp_filtered', 'blimp_supplement']
+2025-04-07:21:48:17,091 INFO     [evaluator.py:133] Setting random seed to 0 | Setting numpy seed to 1234 | Setting torch manual seed to 1234
+2025-04-07:21:48:17,092 INFO     [evaluator.py:181] Initializing hf model, with arguments: {'pretrained': '/home/km3nc/babylm/models/Baby-Llama-58M', 'backend': 'causal', 'trust_remote_code': True}
+2025-04-07:21:48:17,220 WARNING  [other.py:335] Detected kernel version 4.18.0, which is below the recommended minimum of 5.5.0; this can cause the process to hang. It is recommended to upgrade the kernel to the minimum version or higher.
+2025-04-07:21:48:17,220 INFO     [huggingface.py:196] Using device 'cuda:0'
+2025-04-07:21:48:17,226 INFO     [huggingface.py:489] Overrode HF model backend type, and using type 'causal'
+2025-04-07:21:48:17,717 WARNING  [task.py:788] [Task: blimp_adjunct_island_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:48:17,717 WARNING  [task.py:800] [Task: blimp_adjunct_island_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:48:19,986 WARNING  [task.py:788] [Task: blimp_anaphor_gender_agreement_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:48:19,986 WARNING  [task.py:800] [Task: blimp_anaphor_gender_agreement_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:48:30,332 WARNING  [task.py:788] [Task: blimp_anaphor_number_agreement_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:48:30,332 WARNING  [task.py:800] [Task: blimp_anaphor_number_agreement_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:48:39,607 WARNING  [task.py:788] [Task: blimp_animate_subject_passive_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:48:39,607 WARNING  [task.py:800] [Task: blimp_animate_subject_passive_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:48:46,900 WARNING  [task.py:788] [Task: blimp_animate_subject_trans_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:48:46,900 WARNING  [task.py:800] [Task: blimp_animate_subject_trans_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:48:55,157 WARNING  [task.py:788] [Task: blimp_causative_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:48:55,157 WARNING  [task.py:800] [Task: blimp_causative_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:49:03,471 WARNING  [task.py:788] [Task: blimp_complex_NP_island_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:49:03,471 WARNING  [task.py:800] [Task: blimp_complex_NP_island_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:49:11,793 WARNING  [task.py:788] [Task: blimp_coordinate_structure_constraint_complex_left_branch_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:49:11,794 WARNING  [task.py:800] [Task: blimp_coordinate_structure_constraint_complex_left_branch_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:49:19,031 WARNING  [task.py:788] [Task: blimp_coordinate_structure_constraint_object_extraction_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:49:19,031 WARNING  [task.py:800] [Task: blimp_coordinate_structure_constraint_object_extraction_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:49:27,352 WARNING  [task.py:788] [Task: blimp_determiner_noun_agreement_1_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:49:27,352 WARNING  [task.py:800] [Task: blimp_determiner_noun_agreement_1_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:49:35,670 WARNING  [task.py:788] [Task: blimp_determiner_noun_agreement_2_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:49:35,670 WARNING  [task.py:800] [Task: blimp_determiner_noun_agreement_2_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:49:42,966 WARNING  [task.py:788] [Task: blimp_determiner_noun_agreement_irregular_1_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:49:42,966 WARNING  [task.py:800] [Task: blimp_determiner_noun_agreement_irregular_1_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:49:51,205 WARNING  [task.py:788] [Task: blimp_determiner_noun_agreement_irregular_2_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:49:51,205 WARNING  [task.py:800] [Task: blimp_determiner_noun_agreement_irregular_2_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:49:59,473 WARNING  [task.py:788] [Task: blimp_determiner_noun_agreement_with_adj_2_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:49:59,473 WARNING  [task.py:800] [Task: blimp_determiner_noun_agreement_with_adj_2_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:50:07,734 WARNING  [task.py:788] [Task: blimp_determiner_noun_agreement_with_adj_irregular_1_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:50:07,734 WARNING  [task.py:800] [Task: blimp_determiner_noun_agreement_with_adj_irregular_1_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:50:14,952 WARNING  [task.py:788] [Task: blimp_determiner_noun_agreement_with_adj_irregular_2_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:50:14,952 WARNING  [task.py:800] [Task: blimp_determiner_noun_agreement_with_adj_irregular_2_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:50:24,242 WARNING  [task.py:788] [Task: blimp_determiner_noun_agreement_with_adjective_1_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:50:24,242 WARNING  [task.py:800] [Task: blimp_determiner_noun_agreement_with_adjective_1_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:50:32,569 WARNING  [task.py:788] [Task: blimp_distractor_agreement_relational_noun_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:50:32,569 WARNING  [task.py:800] [Task: blimp_distractor_agreement_relational_noun_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:50:48,941 WARNING  [task.py:788] [Task: blimp_distractor_agreement_relative_clause_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:50:48,941 WARNING  [task.py:800] [Task: blimp_distractor_agreement_relative_clause_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:50:59,320 WARNING  [task.py:788] [Task: blimp_drop_argument_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:50:59,320 WARNING  [task.py:800] [Task: blimp_drop_argument_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:51:08,730 WARNING  [task.py:788] [Task: blimp_ellipsis_n_bar_1_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:51:08,730 WARNING  [task.py:800] [Task: blimp_ellipsis_n_bar_1_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:51:17,998 WARNING  [task.py:788] [Task: blimp_ellipsis_n_bar_2_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:51:17,998 WARNING  [task.py:800] [Task: blimp_ellipsis_n_bar_2_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:51:27,346 WARNING  [task.py:788] [Task: blimp_existential_there_object_raising_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:51:27,346 WARNING  [task.py:800] [Task: blimp_existential_there_object_raising_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:51:36,690 WARNING  [task.py:788] [Task: blimp_existential_there_quantifiers_1_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:51:36,690 WARNING  [task.py:800] [Task: blimp_existential_there_quantifiers_1_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:51:44,951 WARNING  [task.py:788] [Task: blimp_existential_there_quantifiers_2_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:51:44,951 WARNING  [task.py:800] [Task: blimp_existential_there_quantifiers_2_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:51:54,358 WARNING  [task.py:788] [Task: blimp_existential_there_subject_raising_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:51:54,358 WARNING  [task.py:800] [Task: blimp_existential_there_subject_raising_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:52:02,743 WARNING  [task.py:788] [Task: blimp_expletive_it_object_raising_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:52:02,743 WARNING  [task.py:800] [Task: blimp_expletive_it_object_raising_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:52:10,032 WARNING  [task.py:788] [Task: blimp_inchoative_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:52:10,032 WARNING  [task.py:800] [Task: blimp_inchoative_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:52:19,379 WARNING  [task.py:788] [Task: blimp_intransitive_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:52:19,379 WARNING  [task.py:800] [Task: blimp_intransitive_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:52:27,700 WARNING  [task.py:788] [Task: blimp_irregular_past_participle_adjectives_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:52:27,700 WARNING  [task.py:800] [Task: blimp_irregular_past_participle_adjectives_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:52:35,065 WARNING  [task.py:788] [Task: blimp_irregular_past_participle_verbs_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:52:35,065 WARNING  [task.py:800] [Task: blimp_irregular_past_participle_verbs_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:52:43,387 WARNING  [task.py:788] [Task: blimp_irregular_plural_subject_verb_agreement_1_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:52:43,387 WARNING  [task.py:800] [Task: blimp_irregular_plural_subject_verb_agreement_1_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:52:54,898 WARNING  [task.py:788] [Task: blimp_irregular_plural_subject_verb_agreement_2_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:52:54,898 WARNING  [task.py:800] [Task: blimp_irregular_plural_subject_verb_agreement_2_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:53:03,156 WARNING  [task.py:788] [Task: blimp_left_branch_island_echo_question_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:53:03,157 WARNING  [task.py:800] [Task: blimp_left_branch_island_echo_question_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:53:11,481 WARNING  [task.py:788] [Task: blimp_left_branch_island_simple_question_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:53:11,481 WARNING  [task.py:800] [Task: blimp_left_branch_island_simple_question_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:53:19,801 WARNING  [task.py:788] [Task: blimp_matrix_question_npi_licensor_present_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:53:19,801 WARNING  [task.py:800] [Task: blimp_matrix_question_npi_licensor_present_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:53:27,030 WARNING  [task.py:788] [Task: blimp_npi_present_1_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:53:27,030 WARNING  [task.py:800] [Task: blimp_npi_present_1_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:53:35,350 WARNING  [task.py:788] [Task: blimp_npi_present_2_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:53:35,350 WARNING  [task.py:800] [Task: blimp_npi_present_2_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:53:45,719 WARNING  [task.py:788] [Task: blimp_only_npi_licensor_present_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:53:45,719 WARNING  [task.py:800] [Task: blimp_only_npi_licensor_present_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:53:53,005 WARNING  [task.py:788] [Task: blimp_only_npi_scope_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:53:53,005 WARNING  [task.py:800] [Task: blimp_only_npi_scope_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:54:05,291 WARNING  [task.py:788] [Task: blimp_passive_1_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:54:05,291 WARNING  [task.py:800] [Task: blimp_passive_1_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:54:13,608 WARNING  [task.py:788] [Task: blimp_passive_2_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:54:13,608 WARNING  [task.py:800] [Task: blimp_passive_2_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:54:21,936 WARNING  [task.py:788] [Task: blimp_principle_A_c_command_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:54:21,936 WARNING  [task.py:800] [Task: blimp_principle_A_c_command_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:54:30,187 WARNING  [task.py:788] [Task: blimp_principle_A_case_1_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:54:30,187 WARNING  [task.py:800] [Task: blimp_principle_A_case_1_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:54:38,508 WARNING  [task.py:788] [Task: blimp_principle_A_case_2_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:54:38,508 WARNING  [task.py:800] [Task: blimp_principle_A_case_2_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:54:46,827 WARNING  [task.py:788] [Task: blimp_principle_A_domain_1_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:54:46,827 WARNING  [task.py:800] [Task: blimp_principle_A_domain_1_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:54:54,061 WARNING  [task.py:788] [Task: blimp_principle_A_domain_2_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:54:54,062 WARNING  [task.py:800] [Task: blimp_principle_A_domain_2_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:55:04,362 WARNING  [task.py:788] [Task: blimp_principle_A_domain_3_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:55:04,362 WARNING  [task.py:800] [Task: blimp_principle_A_domain_3_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:55:11,661 WARNING  [task.py:788] [Task: blimp_principle_A_reconstruction_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:55:11,661 WARNING  [task.py:800] [Task: blimp_principle_A_reconstruction_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:55:18,896 WARNING  [task.py:788] [Task: blimp_regular_plural_subject_verb_agreement_1_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:55:18,896 WARNING  [task.py:800] [Task: blimp_regular_plural_subject_verb_agreement_1_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:55:27,149 WARNING  [task.py:788] [Task: blimp_regular_plural_subject_verb_agreement_2_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:55:27,149 WARNING  [task.py:800] [Task: blimp_regular_plural_subject_verb_agreement_2_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:55:35,407 WARNING  [task.py:788] [Task: blimp_sentential_negation_npi_licensor_present_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:55:35,407 WARNING  [task.py:800] [Task: blimp_sentential_negation_npi_licensor_present_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:55:43,658 WARNING  [task.py:788] [Task: blimp_sentential_negation_npi_scope_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:55:43,658 WARNING  [task.py:800] [Task: blimp_sentential_negation_npi_scope_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:55:50,955 WARNING  [task.py:788] [Task: blimp_sentential_subject_island_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:55:50,955 WARNING  [task.py:800] [Task: blimp_sentential_subject_island_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:55:59,215 WARNING  [task.py:788] [Task: blimp_superlative_quantifiers_1_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:55:59,215 WARNING  [task.py:800] [Task: blimp_superlative_quantifiers_1_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:56:09,585 WARNING  [task.py:788] [Task: blimp_superlative_quantifiers_2_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:56:09,585 WARNING  [task.py:800] [Task: blimp_superlative_quantifiers_2_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:56:18,864 WARNING  [task.py:788] [Task: blimp_tough_vs_raising_1_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:56:18,864 WARNING  [task.py:800] [Task: blimp_tough_vs_raising_1_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:56:26,094 WARNING  [task.py:788] [Task: blimp_tough_vs_raising_2_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:56:26,094 WARNING  [task.py:800] [Task: blimp_tough_vs_raising_2_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:56:34,411 WARNING  [task.py:788] [Task: blimp_transitive_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:56:34,411 WARNING  [task.py:800] [Task: blimp_transitive_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
+2025-04-07:21:56:42,667 WARNING  [task.py:788] [Task: blimp_wh_island_filtered] metric acc is defined, but aggregation is not. using default aggregation=mean
+2025-04-07:21:56:42,667 WARNING  [task.py:800] [Task: blimp_wh_island_filtered] metric acc is defined, but higher_is_better is not. using default higher_is_better=True
