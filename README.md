@@ -1,5 +1,14 @@
 # BabyLM Challenge Project Proposal
 
+## Milestone 3
+
+### How to run the experiments
+* Run train.py.slurm for training the teacher
+* Run distill.slurm for distill the teachers into BabyLM
+* Run slurm-eval.slurm to run evaluation
+
+
+
 ## Milestone 2
 
 **Github:** [https://github.com/leahphw/babylm](https://github.com/leahphw/babylm)

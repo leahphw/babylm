@@ -11,11 +11,12 @@
 # many cores you are using.
 #SBATCH --ntasks=1
 
-# This is one hour 30 seconds. Adjust accordingly.
-#SBATCH --time=01:00:30
+# This is ten seconds not ten minutes. Adjust accordingly.
+# hours:min:sec
+#SBATCH --time=00:15:00
 # Change /netid/ to *your* netid.
-#SBATCH --mail-user=kasym.manatayev@richmond.edu
-#SBATCH --mail-type=TIME_LIMIT_90
+#SBATCH --mail-user=
+#SBATCH --mail-type=ALL
 #####
 #BEGIN — send mail when the job begins.
 #END — send mail when the job ends.
@@ -40,12 +41,15 @@
 
 # basic is the default collection of compute nodes. They
 # each have 52 cores and 384GB of memory.
+
+# Partition for node18
 #SBATCH --partition=NLP
 
-# Memory requests are in megabytes by default. This is 24 GB.
-#SBATCH --mem=64000
+# Memory requests are in megabytes by default.
+#SBATCH --mem=32000
 
 # This figure means cores not CPUs. 
+# Node 18 has 52 cores
 #SBATCH --cpus-per-task=8
 
 # Print the start date/time
@@ -59,38 +63,19 @@ mkdir -p /scratch/jstipl
 echo "I ran on:"
 echo "SLURM_NODELIST=$SLURM_NODELIST"
 
-# Set any environment variables like PATH, LD_LIBRARY_PATH, etc.
-
-# hf_cache is where Hugging face cache for models
-export HF_HOME=/scratch/jstipl/hf_cache
-
 # Return the context/PWD to the directory where *this* file is located.
-echo Moving to $SLURM_SUBMIT_DIR
 cd $SLURM_SUBMIT_DIR
 
+# Set any environment variables like PATH, LD_LIBRARY_PATH, etc.
+
 # Load the necessary program dependencies.
-echo "setting up conda"
-conda init bash
-
-echo "checking pip installs"
-pip freeze | grep minicons
-
-
 
 # Run jobs. /usr/bin/time -v will print a number of useful
 # diagnostics that will help us understand how the cluster
 # is being used. Sleep is a program that does nothing, in this
 # case for 60 seconds. Your program probably does a bit more.
 
-echo "Running python script"
-# python /home/jstipl/shared_cfinegan/evaluation-pipeline-2024/sample_pipeline.py
-
-
-# echo "Run eval script"
-# /usr/bin/time -v ./eval_blimp.sh distilbert/distilgpt2
-
-/usr/bin/time -v torchrun --nproc_per_node=2 train.py --config ./config/llama-16M.yaml
-/usr/bin/time -v torchrun --nproc_per_node=2 train.py --config ./config/gpt-97M.yaml.yaml
+/usr/bin/time -v sleep 60
 
 # Print the ending date/time
 date
