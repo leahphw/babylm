@@ -14,7 +14,7 @@ from torch.utils.data import  Subset
 from random import sample
 
 from pathlib import Path
-import wandb
+# import wandb
 
 
 from babylm_dataset import BabylmDataset
@@ -32,8 +32,8 @@ ALPHA = 0.5
 
 PATH = Path("./")
 
-teacher_dir1 = PATH / 'models/Llama-360M'
-teacher_dir2 = PATH / 'models/gpt-705M'
+teacher_dir1 = PATH / 'models/Llama-16M'
+teacher_dir2 = PATH / 'models/GPT2-97M'
 
 
 MODEL_NAME = f'Baby-Llama-58M'
@@ -41,11 +41,11 @@ MODEL_OUTPUT = Path('./models') /  MODEL_NAME
 EVAL_SAMPLES = 8192
 
 
-wandb_log = True
+wandb_log = False # True when we will import wandb !!!!!
 
 
 
-tokenizer_path = PATH / "models/gpt-clean-16000.json"
+tokenizer_path = "/scratch/jstipl/models/gpt-clean-16000.json"
 tokenizer = GPT2TokenizerFast(tokenizer_file= str(tokenizer_path))
 tokenizer.bos_token = "<s>"
 tokenizer.eos_token = "</s>"
@@ -53,8 +53,8 @@ tokenizer.pad_token = "<pad>"
 
 # in the original code I had random_chunk = False
 # random_chunk=True is expected to improve the model performance a bit
-train_dataset = BabylmDataset(PATH / "data/babylm_10M_clean", SEQ_LENGTH, tokenizer=tokenizer, random_chunk=True)
-full_eval_dataset = BabylmDataset(PATH / "data/babylm_dev_clean", SEQ_LENGTH, tokenizer=tokenizer, offset=0)
+train_dataset = BabylmDataset("/scratch/jstipl/data/train_10M_clean", SEQ_LENGTH, tokenizer=tokenizer, random_chunk=True)
+full_eval_dataset = BabylmDataset("/scratch/jstipl/data/dev_clean", SEQ_LENGTH, tokenizer=tokenizer, offset=0)
 
 eval_indices = sample(range(len(full_eval_dataset)), EVAL_SAMPLES)
 eval_dataset = Subset(full_eval_dataset, eval_indices)
@@ -164,7 +164,7 @@ training_args = DistillationTrainingArguments(
     gradient_accumulation_steps=1,
     per_device_train_batch_size=BATCH_SIZE,
     save_total_limit=1,  # Set to zero to avoid saving
-    report_to="wandb",
+    # report_to="wandb",
     warmup_steps=200, 
     lr_scheduler_type="cosine",
     learning_rate=LR,
@@ -188,7 +188,21 @@ trainer = DistillationTrainer(
 
     )
 
+if torch.cuda.is_available():
+    print(f"Number of GPUs: {torch.cuda.device_count()}")
+    for i in range(torch.cuda.device_count()):
+        print(f"GPU {i}: {torch.cuda.get_device_name(i)}")
+        
+    print("To use all GPUs run: torchrun --nproc_per_node=2 train.py")
+else:
+    print("No GPU found, using CPU.")
+    print("Exiting")
+    exit(1)
 
+assert torch.cuda.device_count() == 2, "Using too many GPUs, professor will not be happy"
+
+
+print(f"Trainer is using device: {trainer.args.device}")
 trainer.train()
 
 
