@@ -1,12 +1,40 @@
 # BabyLM Challenge Project Proposal
 
+
 ## Milestone 3
+
+Kasym Manatayev, Leah Le, Jan Stipl
+
+Goal: Ensure working code and evaluation pipeline before modifying the mode ✅
+
+Working implementation of the baseline model in the main branch of the git repository,
+ including documentation on how to run experiments. ✅
 
 ### How to run the experiments
 * Run train.py.slurm for training the teacher
 * Run distill.slurm for distill the teachers into BabyLM
 * Run slurm-eval.slurm to run evaluation
 
+
+### How the baseline works
+
+Teacher: Llama-16M and GPT2-97M  
+Student: BabyLlama-58M
+
+The distillation uses cross entropy for expected output and Kullback-Leibler divergence for the teacher logits. We used 50% weight for the hard targets (expected output) and 25% for each teacher. 
+
+### Initial results
+
+Evaluation results can be seen in the slurm-207594.out file.  
+The whole model had a score of 0.5803 ± 0.0053 in the blimp\_supplement benchmark.  
+For the blimp\_filtered a score was 0.6673 ± 0.0016. 
+
+### Any implementation challenges
+
+* Making the paths work on spyder.  
+* Running the evaluation pipeline with our own model (we removed a few lines from the original eval.sh script).  
+* We couldn’t push the models to git due to their large size.  
+* Debugging
 
 
 ## Milestone 2
