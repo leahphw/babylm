@@ -14,7 +14,7 @@
 # This is one hour 30 seconds. Adjust accordingly.
 #SBATCH --time=01:00:30
 # Change /netid/ to *your* netid.
-#SBATCH --mail-user=jan.stipl@richmond.edu
+#SBATCH --mail-user=leah.le@richmond.edu
 #SBATCH --mail-type=ALL
 #####
 #BEGIN — send mail when the job begins.
