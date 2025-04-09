@@ -36,7 +36,7 @@
 # is not required if there is only one type on the node.
 # The final ":1" says, "I want one GPU."
 ###
-#SBATCH --gres=gpu:tesla_a40:1
+#SBATCH --gres=gpu:tesla_a40:2
 
 # basic is the default collection of compute nodes. They
 # each have 52 cores and 384GB of memory.
@@ -53,7 +53,7 @@ date
 
 # This step makes sure you have a directory on the /scratch
 # mount point. Be sure to change netid to your netid.
-mkdir -p /scratch/km3nc
+mkdir -p /scratch/pl3nt
 
 # Print the node your job is running on
 echo "I ran on:"
@@ -66,7 +66,7 @@ cd $SLURM_SUBMIT_DIR
 export HF_HOME=/scratch/cfinegan/hf_cache
 
 echo "cd to target directory"
-cd /home/km3nc/shared_cfinegan/evaluation-pipeline-2024/
+cd /home/pl3nt/shared_cfinegan/evaluation-pipeline-2024/
 
 # Load the necessary program dependencies.
 echo "setting up conda"
@@ -86,7 +86,7 @@ pip freeze | grep minicons
 # python /home/pl3nt/shared_cfinegan/evaluation-pipeline-2024/sample_pipeline.py
 
 echo "Run eval script"
-/usr/bin/time -v /home/km3nc/babylm/neweval_blimp.sh /home/km3nc/babylm/models/Baby-Llama-58M
+/usr/bin/time -v /home/pl3nt/babylm/neweval_blimp.sh /home/pl3nt/babylm/models/Baby-Llama-58M
 
 
 # echo "Run eval script"
