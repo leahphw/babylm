@@ -53,7 +53,7 @@ date
 
 # This step makes sure you have a directory on the /scratch
 # mount point. Be sure to change netid to your netid.
-mkdir -p /scratch/jstipl
+mkdir -p /scratch/pl3nt
 
 # Print the node your job is running on
 echo "I ran on:"
@@ -62,7 +62,8 @@ echo "SLURM_NODELIST=$SLURM_NODELIST"
 # Set any environment variables like PATH, LD_LIBRARY_PATH, etc.
 
 # hf_cache is where Hugging face cache for models
-export HF_HOME=/scratch/jstipl/hf_cache
+export HF_HOME=/scratch/pl3nt/hf_cache
+export WANDB_MODE=offline
 
 # Return the context/PWD to the directory where *this* file is located.
 echo Moving to $SLURM_SUBMIT_DIR
