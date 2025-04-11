@@ -129,7 +129,7 @@ def main():
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     STUDENT_NAME = "Baby-Llama-58M"
-    STUDENT_OUTPUT = consts.TEACHER_DIR / f"{STUDENT_NAME}_{timestamp}"
+    STUDENT_OUTPUT = consts.STUDENT_DIR / f"{STUDENT_NAME}_{timestamp}"
 
     wandb_log = False
 
