@@ -32,45 +32,84 @@ from datetime import datetime
 
 
 class DistillationTrainingArguments(TrainingArguments):
-    def __init__(self, *args, alpha=0.5, temperature=2.0, **kwargs):
+    def __init__(self, *args, alpha=0.5, temperature=2.0, contrastive_weight=0.1, **kwargs):
         super().__init__(*args, **kwargs)
         self.alpha = alpha
         self.temperature = temperature
+        self.contrastive_weight = contrastive_weight
 
 
-class DistillationTrainer(Trainer):
+class ContrastiveDistillationTrainer(Trainer):
     def __init__(self, *args, teacher_models=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.teachers = teacher_models
         for teacher in self.teachers:
-            # place each teacher on same device as student
             self._move_model_to_device(teacher, self.model.device)
             teacher.eval()
+        
+        # Define projection heads for contrastive learning
+        self.student_projection = nn.Linear(512, 256).to(self.model.device)  # Project to lower dimension
+        self.teacher_projection = nn.Linear(512, 256).to(self.model.device)
+        
+    def compute_contrastive_loss(self, student_hidden, teacher_hidden):
+        # Project hidden states to lower dimension
+        student_proj = self.student_projection(student_hidden)
+        teacher_proj = self.teacher_projection(teacher_hidden)
+        
+        # Normalize projections
+        student_proj = F.normalize(student_proj, dim=-1)
+        teacher_proj = F.normalize(teacher_proj, dim=-1)
+        
+        # Compute similarity matrix
+        similarity = torch.matmul(student_proj, teacher_proj.transpose(-2, -1))
+        
+        # Temperature scaling
+        similarity = similarity / self.args.temperature
+        
+        # Create labels (diagonal matrix)
+        labels = torch.arange(similarity.size(0), device=similarity.device)
+        
+        # Compute contrastive loss
+        loss = F.cross_entropy(similarity, labels)
+        return loss
 
     def compute_loss(self, model, inputs, return_outputs=False):
-        # compute student output
-        outputs_student = model(**inputs)
+        # Get student outputs with hidden states
+        outputs_student = model(**inputs, output_hidden_states=True)
         student_loss = outputs_student.loss
-
-        # compute teacher output
+        
+        # Get teacher outputs with hidden states
         with torch.no_grad():
             all_teacher_logits = []
+            all_teacher_hidden = []
             for teacher in self.teachers:
-                outputs_teacher = teacher(**inputs)
+                outputs_teacher = teacher(**inputs, output_hidden_states=True)
                 all_teacher_logits.append(outputs_teacher.logits)
+                all_teacher_hidden.append(outputs_teacher.hidden_states[-1])  # Last layer hidden states
+            
             avg_teacher_logits = torch.stack(all_teacher_logits).mean(dim=0)
+            avg_teacher_hidden = torch.stack(all_teacher_hidden).mean(dim=0)
 
-        # assert size
-        assert outputs_student.logits.size() == avg_teacher_logits.size()
-
-        # Soften probabilities and compute distillation loss
+        # Standard distillation loss
         loss_function = nn.KLDivLoss(reduction="batchmean")
         loss_logits = loss_function(
             F.log_softmax(outputs_student.logits / self.args.temperature, dim=-1),
             F.softmax(avg_teacher_logits / self.args.temperature, dim=-1),
         ) * (self.args.temperature**2)
-        # Return weighted student loss
-        loss = self.args.alpha * student_loss + (1.0 - self.args.alpha) * loss_logits
+        
+        # Contrastive loss on hidden states
+        contrastive_loss = self.compute_contrastive_loss(
+            outputs_student.hidden_states[-1],  # Last layer hidden states
+            avg_teacher_hidden
+        )
+        
+        # Combined loss
+        loss = (
+            self.args.alpha * student_loss + 
+            (1.0 - self.args.alpha) * loss_logits +
+            self.args.contrastive_weight * contrastive_loss
+        )
+        
         return (loss, outputs_student) if return_outputs else loss
 
 
@@ -120,12 +159,13 @@ def main():
 
     TEMPERATURE = 2.0
     ALPHA = 0.5
+    CONTRASTIVE_WEIGHT = 0.1  # Weight for contrastive loss
 
     EVAL_SAMPLES = 8192
     #############
 
     TEACHER_DIR1 = consts.TEACHER_DIR / "Llama-16M"
-    TEACHER_DIR2 = consts.TEACHER_DIR / "GPT2-97M"
+    TEACHER_DIR2 = Path("/scratch/nlp_G1/teachers/GPT2-97M")
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     STUDENT_NAME = "Baby-Llama-58M"
@@ -153,16 +193,30 @@ def main():
     eval_dataset = Subset(full_eval_dataset, eval_indices)
     del full_eval_dataset
 
-    teacher1 = LlamaForCausalLM.from_pretrained(TEACHER_DIR1)
-    teacher2 = GPT2LMHeadModel.from_pretrained(TEACHER_DIR2)
-    teachers = [teacher1, teacher2]
-    # teachers = [teacher1]
+    # Load teachers with error handling
+    teachers = []
+    try:
+        teacher1 = LlamaForCausalLM.from_pretrained(TEACHER_DIR1)
+        teachers.append(teacher1)
+        print(f"Successfully loaded teacher1 from {TEACHER_DIR1}")
+    except Exception as e:
+        print(f"Failed to load teacher1: {e}")
+    
+    try:
+        teacher2 = GPT2LMHeadModel.from_pretrained(TEACHER_DIR2)
+        teachers.append(teacher2)
+        print(f"Successfully loaded teacher2 from {TEACHER_DIR2}")
+    except Exception as e:
+        print(f"Failed to load teacher2: {e}")
+
+    if not teachers:
+        raise RuntimeError("No teacher models could be loaded. Please check the model directories.")
 
     student = create_student(tokenizer, SEQ_LENGTH)
 
     print(f"model num parameters: student = {student.num_parameters()}")
-    print(f"model num parameters: teacher1 = {teacher1.num_parameters()}")
-    # print(f"model num parameters: teacher2 = {teacher2.num_parameters()}")
+    for i, teacher in enumerate(teachers):
+        print(f"model num parameters: teacher{i+1} = {teacher.num_parameters()}")
 
     if wandb_log:
         wandb.login()
@@ -181,8 +235,8 @@ def main():
         num_train_epochs=6,
         gradient_accumulation_steps=1,
         per_device_train_batch_size=BATCH_SIZE,
-        save_total_limit=1,  # Set to zero to avoid saving
-        report_to=[],  # "wandb",
+        save_total_limit=1,
+        report_to=[],
         warmup_steps=200,
         lr_scheduler_type="cosine",
         learning_rate=LR,
@@ -193,9 +247,10 @@ def main():
         weight_decay=0.1,
         alpha=ALPHA,
         temperature=TEMPERATURE,
+        contrastive_weight=CONTRASTIVE_WEIGHT,
     )
 
-    trainer = DistillationTrainer(
+    trainer = ContrastiveDistillationTrainer(
         student,
         training_args,
         teacher_models=teachers,

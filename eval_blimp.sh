@@ -11,7 +11,3 @@ python -m lm_eval --model hf \
     --log_samples \
     --output_path results/blimp/${MODEL_BASENAME}/blimp_results.json \
     --trust_remote_code \
-    
-
-# Use `--model hf-mlm` and `--model_args pretrained=$MODEL_PATH,backend="mlm"` if using a custom masked LM.
-# Add `--trust_remote_code` if you need to load custom config/model files.
