@@ -24,6 +24,7 @@ from pathlib import Path
 
 from babylm_dataset import BabylmDataset
 import consts
+from datetime import datetime
 
 #  Distillation Trainer
 #  We modified the Trainer from this repo https://github.com/philschmid/knowledge-distillation-transformers-pytorch-sagemaker
@@ -126,8 +127,9 @@ def main():
     TEACHER_DIR1 = consts.TEACHER_DIR / "Llama-16M"
     TEACHER_DIR2 = consts.TEACHER_DIR / "GPT2-97M"
 
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     STUDENT_NAME = "Baby-Llama-58M"
-    STUDENT_OUTPUT = consts.TEACHER_DIR / STUDENT_NAME
+    STUDENT_OUTPUT = consts.TEACHER_DIR / f"{STUDENT_NAME}_{timestamp}"
 
     wandb_log = False
 
