@@ -91,7 +91,7 @@ echo "Running python script"
 # /usr/bin/time -v ./eval_blimp.sh distilbert/distilgpt2
 
 /usr/bin/time -v torchrun --nproc_per_node=2 train.py --config ./config/llama-16M.yaml
-/usr/bin/time -v torchrun --nproc_per_node=2 train.py --config ./config/gpt-97M.yaml.yaml
+/usr/bin/time -v torchrun --nproc_per_node=2 train.py --config ./config/gpt-97M.yaml
 
 # Print the ending date/time
 date
