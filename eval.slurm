@@ -5,7 +5,7 @@
 # =============================================
 
 # Job Configuration
-#SBATCH --job-name=CFD_EVAL
+#SBATCH --job-name=g1-eval
 #SBATCH --ntasks=1
 #SBATCH --time=01:00:30
 #SBATCH --mail-user=leah.le@richmond.edu
