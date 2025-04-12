@@ -11,6 +11,7 @@ from transformers import (
     TrainingArguments,
     DataCollatorForLanguageModeling,
 )
+from transformers.modeling_outputs import CausalLMOutputWithCrossAttentions
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -32,52 +33,109 @@ from datetime import datetime
 
 
 class DistillationTrainingArguments(TrainingArguments):
-    def __init__(self, *args, alpha=0.5, temperature=2.0, **kwargs):
+    def __init__(
+        self,
+        *args,
+        layers: tuple[int, ...],
+        layer_loss_weight=1.0,
+        logit_loss_weight=1.0,
+        hard_target_loss_weight=1.0,
+        temperature=2.0,
+        **kwargs,
+    ):
+        """Creates a modified training arguments class for distillation training.
+
+        Args:
+            *args: Variable length argument list for base TrainingArguments.
+            alpha (float): Weight for balancing student loss vs distillation loss. Default 0.5.
+            temperature (float): Temperature parameter for softening probability distributions. Default 2.0.
+            layers (tuple[int, ...]): Tuple specifying which layers to use for distillation.
+            **kwargs: Additional keyword arguments for base TrainingArguments.
+        """
         super().__init__(*args, **kwargs)
-        self.alpha = alpha
+        self.logit_loss_weight = logit_loss_weight
         self.temperature = temperature
+        self.layers = layers
+        self.layer_loss_weight = layer_loss_weight
+        self.hard_target_loss_weight = hard_target_loss_weight
 
 
-class DistillationTrainer(Trainer):
+class LayerDistillationTrainer(Trainer):
     def __init__(self, *args, teacher_models=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.teachers = teacher_models
+        self.teachers: list[torch.nn.Module] = teacher_models
         for teacher in self.teachers:
             # place each teacher on same device as student
             self._move_model_to_device(teacher, self.model.device)
             teacher.eval()
 
-    def compute_loss(self, model, inputs, return_outputs=False):
+    def compute_loss(self, model: torch.nn.Module, inputs, return_outputs=False):
         # compute student output
-        outputs_student = model(**inputs)
-        student_loss = outputs_student.loss
+        outputs_student = model(
+            **inputs,
+            output_hidden_states=True,  # Request hidden states from all layers
+        )
+        loss_student = outputs_student.loss
 
         # compute teacher output
+        teacher_outputs: list[CausalLMOutputWithCrossAttentions] = []
         with torch.no_grad():
-            all_teacher_logits = []
             for teacher in self.teachers:
-                outputs_teacher = teacher(**inputs)
-                all_teacher_logits.append(outputs_teacher.logits)
-            avg_teacher_logits = torch.stack(all_teacher_logits).mean(dim=0)
+                outputs_teacher = teacher(
+                    **inputs,
+                    output_hidden_states=True,  # Request hidden states from all layers
+                    # output_attentions=True,  # Request self-attention weights (and cross-attentions if applicable)
+                )
+                teacher_outputs.append(outputs_teacher)
 
-        # assert size
+        # Distillate layers
+        # TODO: Can we use KLDivLoss if it is not logits?
+        # How to add temperature?
+        loss_layers = 0.0
+        for layer in self.args.layers:
+            layer_hidden_states = []
+            for output in teacher_outputs:
+                hidden_state = output.hidden_states[layer]
+                layer_hidden_states.append(hidden_state)
+
+            avg_teacher_hidden_states = torch.stack(layer_hidden_states).mean(dim=0)
+            student_hidden_state = outputs_student.hidden_states[layer]
+
+            # Ensure shapes match
+            assert (
+                student_hidden_state.size() == avg_teacher_hidden_states.size()
+            ), f"Shape mismatch: student {student_hidden_state.size()} vs teacher {avg_teacher_hidden_states.size()}"
+
+            # Compute MSE loss for hidden states (alternative to KL for representations)
+            mse_loss = F.mse_loss(student_hidden_state, avg_teacher_hidden_states)
+            loss_layers += mse_loss
+
+        # Distillate logits
+        all_teacher_logits = []
+        for output in teacher_outputs:
+            all_teacher_logits.append(outputs_teacher.logits)
+        avg_teacher_logits = torch.stack(all_teacher_logits).mean(dim=0)
+
         assert outputs_student.logits.size() == avg_teacher_logits.size()
-
         # Soften probabilities and compute distillation loss
-        loss_function = nn.KLDivLoss(reduction="batchmean")
-        loss_logits = loss_function(
+        loss_logits = nn.KLDivLoss(reduction="batchmean")(
             F.log_softmax(outputs_student.logits / self.args.temperature, dim=-1),
             F.softmax(avg_teacher_logits / self.args.temperature, dim=-1),
         ) * (self.args.temperature**2)
+
         # Return weighted student loss
-        loss = self.args.alpha * student_loss + (1.0 - self.args.alpha) * loss_logits
+        loss = (
+            self.args.hard_target_loss_weight * loss_student
+            + self.args.logit_loss_weight * loss_logits
+            + self.args.layer_loss_weight * loss_layers
+        )
         return (loss, outputs_student) if return_outputs else loss
 
 
 def create_student(tokenizer, seq_length):
     config = LlamaConfig(
         vocab_size=tokenizer.vocab_size,
-        hidden_size=512,
+        hidden_size=256, # Match teacher
         num_hidden_layers=16,
         intermediate_size=1024,
         num_attention_heads=8,
@@ -154,9 +212,9 @@ def main():
     del full_eval_dataset
 
     teacher1 = LlamaForCausalLM.from_pretrained(TEACHER_DIR1)
-    teacher2 = GPT2LMHeadModel.from_pretrained(TEACHER_DIR2)
-    teachers = [teacher1, teacher2]
-    # teachers = [teacher1]
+    # teacher2 = GPT2LMHeadModel.from_pretrained(TEACHER_DIR2)
+    # teachers = [teacher1, teacher2]
+    teachers = [teacher1]
 
     student = create_student(tokenizer, SEQ_LENGTH)
 
@@ -191,11 +249,12 @@ def main():
         load_best_model_at_end=True,
         metric_for_best_model="eval_loss",
         weight_decay=0.1,
-        alpha=ALPHA,
+        logit_loss_weight=ALPHA,
         temperature=TEMPERATURE,
+        layers=(-1,),
     )
 
-    trainer = DistillationTrainer(
+    trainer = LayerDistillationTrainer(
         student,
         training_args,
         teacher_models=teachers,
