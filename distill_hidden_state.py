@@ -135,7 +135,7 @@ class LayerDistillationTrainer(Trainer):
 def create_student(tokenizer, seq_length):
     config = LlamaConfig(
         vocab_size=tokenizer.vocab_size,
-        hidden_size=256, # Match teacher
+        hidden_size=256,  # Match teacher
         num_hidden_layers=16,
         intermediate_size=1024,
         num_attention_heads=8,
@@ -177,25 +177,45 @@ def main():
     SEQ_LENGTH = 128
 
     TEMPERATURE = 2.0
-    ALPHA = 0.5
+    LOGIT_LOSS_WEIGHT = 1.0
+    HARD_TARGET_LOSS_WEIGHT = 1.0
+    LAYER_LOSS_WEIGHT = 1.0
 
     EVAL_SAMPLES = 8192
     #############
 
     TEACHER_DIR1 = consts.TEACHER_DIR / "Llama-16M"
     TEACHER_DIR2 = consts.TEACHER_DIR / "GPT2-97M"
-
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    STUDENT_NAME = "Baby-Llama-58M"
-    STUDENT_OUTPUT = consts.STUDENT_DIR / f"{STUDENT_NAME}_{timestamp}"
-
-    wandb_log = False
+    teacher1 = LlamaForCausalLM.from_pretrained(TEACHER_DIR1)
+    # teacher2 = GPT2LMHeadModel.from_pretrained(TEACHER_DIR2)
+    # teachers = [teacher1, teacher2]
+    teachers = [teacher1]
 
     tokenizer = GPT2TokenizerFast(tokenizer_file=str(consts.TOKENIZER_PATH))
     tokenizer.bos_token = "<s>"
     tokenizer.eos_token = "</s>"
     tokenizer.pad_token = "<pad>"
     tokenizer.model_max_length = SEQ_LENGTH
+
+    student = create_student(tokenizer, SEQ_LENGTH)
+    STUDENT_NAME = "_".join(
+        (
+            f"Palenka-Llama-{student.num_parameters()//1_000_000}M",
+            TEACHER_DIR1.name,
+            f"LL{LOGIT_LOSS_WEIGHT}",
+            f"HL{HARD_TARGET_LOSS_WEIGHT}",
+            f"LL{LAYER_LOSS_WEIGHT}",
+            f"T{TEMPERATURE}",
+            datetime.now().strftime("%Y%m%d_%H%M%S"),
+        )
+    )
+    STUDENT_OUTPUT = consts.STUDENT_DIR / STUDENT_NAME
+
+    print(f"model num parameters: student = {student.num_parameters()}")
+    print(f"model num parameters: teacher1 = {teacher1.num_parameters()}")
+    # print(f"model num parameters: teacher2 = {teacher2.num_parameters()}")
+
+    wandb_log = False
 
     train_dataset = BabylmDataset(
         consts.TRAIN_DATASET_STRICT_PATH,
@@ -210,17 +230,6 @@ def main():
     eval_indices = random.sample(range(len(full_eval_dataset)), EVAL_SAMPLES)
     eval_dataset = Subset(full_eval_dataset, eval_indices)
     del full_eval_dataset
-
-    teacher1 = LlamaForCausalLM.from_pretrained(TEACHER_DIR1)
-    # teacher2 = GPT2LMHeadModel.from_pretrained(TEACHER_DIR2)
-    # teachers = [teacher1, teacher2]
-    teachers = [teacher1]
-
-    student = create_student(tokenizer, SEQ_LENGTH)
-
-    print(f"model num parameters: student = {student.num_parameters()}")
-    print(f"model num parameters: teacher1 = {teacher1.num_parameters()}")
-    # print(f"model num parameters: teacher2 = {teacher2.num_parameters()}")
 
     if wandb_log:
         wandb.login()
@@ -249,7 +258,9 @@ def main():
         load_best_model_at_end=True,
         metric_for_best_model="eval_loss",
         weight_decay=0.1,
-        logit_loss_weight=ALPHA,
+        logit_loss_weight=LOGIT_LOSS_WEIGHT,
+        hard_target_loss_weight=HARD_TARGET_LOSS_WEIGHT,
+        layer_loss_weight=LAYER_LOSS_WEIGHT,
         temperature=TEMPERATURE,
         layers=(-1,),
     )
