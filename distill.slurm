@@ -5,7 +5,7 @@
 # =============================================
 
 # Job Configuration
-#SBATCH --job-name=nlp_g1_distill
+#SBATCH --job-name=g1_distill
 #SBATCH --ntasks=1
 #SBATCH --time=01:00:30
 #SBATCH --mail-user=leah.le@richmond.edu

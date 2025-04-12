@@ -40,40 +40,68 @@ class DistillationTrainingArguments(TrainingArguments):
 
 
 class ContrastiveDistillationTrainer(Trainer):
+    """Trainer implementing contrastive distillation with ensemble of teachers."""
+    
     def __init__(self, *args, teacher_models=None, **kwargs):
+        """
+        Args:
+            teacher_models (list): List of teacher models to distill from
+        """
         super().__init__(*args, **kwargs)
         self.teachers = teacher_models
         for teacher in self.teachers:
             self._move_model_to_device(teacher, self.model.device)
             teacher.eval()
         
-        # Define projection heads for contrastive learning
-        self.student_projection = nn.Linear(512, 256).to(self.model.device)  # Project to lower dimension
-        self.teacher_projection = nn.Linear(512, 256).to(self.model.device)
+        # Projection heads for contrastive learning
+        # Map all hidden states to a common dimension (256)
+        self.student_projection = nn.Linear(512, 256).to(self.model.device)
+        self.teacher_projections = nn.ModuleList([
+            nn.Linear(teacher.config.hidden_size, 256).to(self.model.device)
+            for teacher in self.teachers
+        ])
         
     def compute_contrastive_loss(self, student_hidden, teacher_hidden):
-        # Project hidden states to lower dimension
-        student_proj = self.student_projection(student_hidden)
-        teacher_proj = self.teacher_projection(teacher_hidden)
+        """
+        Compute contrastive loss between student and teacher hidden states.
         
-        # Normalize projections
-        student_proj = F.normalize(student_proj, dim=-1)
-        teacher_proj = F.normalize(teacher_proj, dim=-1)
+        Args:
+            student_hidden (torch.Tensor): Student model hidden states [batch_size, seq_length, hidden_dim]
+            teacher_hidden (torch.Tensor): Teacher model hidden states [batch_size, seq_length, hidden_dim]
+            
+        Returns:
+            torch.Tensor: Contrastive loss
+        """
+        batch_size, seq_length, hidden_dim = student_hidden.shape
         
-        # Compute similarity matrix
-        similarity = torch.matmul(student_proj, teacher_proj.transpose(-2, -1))
+        # Project and normalize hidden states
+        student_proj = F.normalize(self.student_projection(student_hidden), dim=-1)  # [batch_size, seq_length, proj_dim]
+        teacher_proj = F.normalize(teacher_hidden, dim=-1)  # [batch_size, seq_length, proj_dim]
         
-        # Temperature scaling
-        similarity = similarity / self.args.temperature
+        # Reshape to combine batch and sequence dimensions
+        student_proj = student_proj.reshape(-1, student_proj.size(-1))  # [batch_size * seq_length, proj_dim]
+        teacher_proj = teacher_proj.reshape(-1, teacher_proj.size(-1))  # [batch_size * seq_length, proj_dim]
+        
+        # Compute similarity matrix with temperature scaling
+        similarity = torch.matmul(student_proj, teacher_proj.transpose(-2, -1)) / self.args.temperature
         
         # Create labels (diagonal matrix)
         labels = torch.arange(similarity.size(0), device=similarity.device)
         
-        # Compute contrastive loss
-        loss = F.cross_entropy(similarity, labels)
-        return loss
+        return F.cross_entropy(similarity, labels)
 
     def compute_loss(self, model, inputs, return_outputs=False):
+        """
+        Compute combined loss for contrastive distillation.
+        
+        Args:
+            model: Student model
+            inputs: Input tensors
+            return_outputs: Whether to return model outputs
+            
+        Returns:
+            torch.Tensor or tuple: Loss or (loss, outputs)
+        """
         # Get student outputs with hidden states
         outputs_student = model(**inputs, output_hidden_states=True)
         student_loss = outputs_student.loss
@@ -82,10 +110,12 @@ class ContrastiveDistillationTrainer(Trainer):
         with torch.no_grad():
             all_teacher_logits = []
             all_teacher_hidden = []
-            for teacher in self.teachers:
+            for i, teacher in enumerate(self.teachers):
                 outputs_teacher = teacher(**inputs, output_hidden_states=True)
                 all_teacher_logits.append(outputs_teacher.logits)
-                all_teacher_hidden.append(outputs_teacher.hidden_states[-1])  # Last layer hidden states
+                # Project teacher hidden states to common dimension
+                projected_hidden = self.teacher_projections[i](outputs_teacher.hidden_states[-1])
+                all_teacher_hidden.append(projected_hidden)
             
             avg_teacher_logits = torch.stack(all_teacher_logits).mean(dim=0)
             avg_teacher_hidden = torch.stack(all_teacher_hidden).mean(dim=0)
@@ -99,7 +129,7 @@ class ContrastiveDistillationTrainer(Trainer):
         
         # Contrastive loss on hidden states
         contrastive_loss = self.compute_contrastive_loss(
-            outputs_student.hidden_states[-1],  # Last layer hidden states
+            outputs_student.hidden_states[-1],
             avg_teacher_hidden
         )
         
