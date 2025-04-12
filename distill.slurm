@@ -9,7 +9,7 @@
 #SBATCH --ntasks=1
 #SBATCH --time=01:00:30
 #SBATCH --mail-user=leah.le@richmond.edu
-#SBATCH --mail-type=TIME_LIMIT_90
+#SBATCH --mail-type=ALL
 
 # Resource Allocation
 #SBATCH --gres=gpu:tesla_a40:2
