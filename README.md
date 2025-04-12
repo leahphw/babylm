@@ -1,5 +1,17 @@
 # BabyLM Challenge Project Proposal
 
+## Milestone 4
+### Problems/TODOs
+  1) Matching hidden_state size might limit us in teachers. We could find a way to shrink/expand the layers to
+  match the students size. 
+  * Shrink by taking average of surrounding neurons?
+  * Expand by adding random numbers?
+
+  2) Can we use KLDivLoss for hidden layers if it is not logits? How to add temperature?
+
+  3) Do hyper param search to find which layers are best and what weights work best.
+
+
 
 ## Milestone 3
 
