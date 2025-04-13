@@ -5,7 +5,7 @@
 # =============================================
 
 # Job Configuration
-#SBATCH --job-name=nlp_g1_train
+#SBATCH --job-name=g1-eval
 #SBATCH --ntasks=1
 #SBATCH --time=01:00:30
 #SBATCH --mail-user=leah.le@richmond.edu
@@ -14,8 +14,8 @@
 # Resource Allocation
 #SBATCH --gres=gpu:tesla_a40:2
 #SBATCH --partition=NLP
-#SBATCH --mem=64000
-#SBATCH --cpus-per-task=8
+#SBATCH --mem=32000
+#SBATCH --cpus-per-task=4
 
 # =============================================
 # Environment Setup
@@ -29,27 +29,25 @@ echo "Running on node: $SLURM_NODELIST"
 mkdir -p /scratch/pl3nt
 
 # Set environment variables
-export HF_HOME=/scratch/pl3nt/hf_cache
-export WANDB_MODE=offline
+export HF_HOME=/scratch/cfinegan/hf_cache
 
 # Change to submission directory
 cd $SLURM_SUBMIT_DIR
+
+# Change to evaluation pipeline directory
+echo "Changing to evaluation pipeline directory..."
+cd /home/pl3nt/shared_cfinegan/evaluation-pipeline-2024/
 
 # Initialize conda
 conda init bash
 
 # =============================================
-# Training Execution
+# Evaluation Execution
 # =============================================
 
-# Train Llama model
-echo "Training Llama model..."
-/usr/bin/time -v torchrun --nproc_per_node=2 train.py --config ./config/llama-16M.yaml
-
-# Train GPT model
-echo "Training GPT model..."
-/usr/bin/time -v torchrun --nproc_per_node=2 train.py --config ./config/gpt-97M.yaml
+# Run BLiMP evaluation
+echo "Running BLiMP evaluation..."
+/usr/bin/time -v /home/pl3nt/babylm/eval-blimp.sh /scratch/nlp_G1/models/student/Baby-Llama-58M_20250411_212251
 
 # Print job end time
 date
-
