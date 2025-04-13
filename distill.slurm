@@ -5,9 +5,9 @@
 # =============================================
 
 # Job Configuration
-#SBATCH --job-name=g1_distill
+#SBATCH --job-name=g1-distill
 #SBATCH --ntasks=1
-#SBATCH --time=01:00:30
+#SBATCH --time=24:00:00
 #SBATCH --mail-user=leah.le@richmond.edu
 #SBATCH --mail-type=ALL
 
@@ -43,7 +43,7 @@ conda init bash
 
 # Run distillation training
 echo "Starting distillation training..."
-/usr/bin/time -v torchrun --nproc_per_node=2 hidden-state-distillation.py
+/usr/bin/time -v torchrun --nproc_per_node=2 dskd-distillation-1-teacher.py
 
 # Print job end time
 date
