@@ -147,6 +147,96 @@ class DistillationTrainer(Trainer):
         return (loss, outputs_student) if return_outputs else loss
 
 
+def create_student(tokenizer, seq_length):
+    config = LlamaConfig(
+        vocab_size=tokenizer.vocab_size,
+        hidden_size=512,
+        num_hidden_layers=16,
+        intermediate_size=1024,
+        num_attention_heads=8,
+        bos_token_id=tokenizer.convert_tokens_to_ids("<s>"),
+        eos_token_id=tokenizer.convert_tokens_to_ids("</s>"),
+        pad_token_id=tokenizer.convert_tokens_to_ids("<pad>"),
+        max_position_embeddings=2 * seq_length,
+    )
+
+    student = LlamaForCausalLM(config)
+    return student
+
+
+def check_gpu_availability():
+
+    if torch.cuda.is_available():
+        print(f"Number of GPUs: {torch.cuda.device_count()}")
+        for i in range(torch.cuda.device_count()):
+            print(f"GPU {i}: {torch.cuda.get_device_name(i)}")
+
+        print("To use all GPUs run: torchrun --nproc_per_node=2 train.py")
+    else:
+        print("No GPU found, using CPU.")
+        print("Exiting")
+        exit(1)
+
+    assert (
+        torch.cuda.device_count() == 2
+    ), "Using too many GPUs, professor will not be happy"
+
+
+def main():
+    check_gpu_availability()
+    random.seed(consts.RANDOM_SEED)
+
+    #############
+    LR = 2.5e-4
+    BATCH_SIZE = 32
+    SEQ_LENGTH = 128
+
+    TEMPERATURE = 2.0
+    ALPHA = 0.5
+
+    EVAL_SAMPLES = 8192
+    #############
+
+    TEACHER_DIR1 = consts.TEACHER_DIR / "Llama-16M"
+    TEACHER_DIR2 = consts.TEACHER_DIR / "GPT2-97M"
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    STUDENT_NAME = "Baby-Llama-58M"
+    STUDENT_OUTPUT = consts.STUDENT_DIR / f"{STUDENT_NAME}_{timestamp}"
+
+    wandb_log = False
+
+    tokenizer = GPT2TokenizerFast(tokenizer_file=str(consts.TOKENIZER_PATH))
+    tokenizer.bos_token = "<s>"
+    tokenizer.eos_token = "</s>"
+    tokenizer.pad_token = "<pad>"
+    tokenizer.model_max_length = SEQ_LENGTH
+
+    train_dataset = BabylmDataset(
+        consts.TRAIN_DATASET_STRICT_PATH,
+        SEQ_LENGTH,
+        tokenizer=tokenizer,
+        random_chunk=True,
+    )
+    full_eval_dataset = BabylmDataset(
+        consts.DEV_DATASET_STRICT_PATH, SEQ_LENGTH, tokenizer=tokenizer, offset=0
+    )
+
+    eval_indices = random.sample(range(len(full_eval_dataset)), EVAL_SAMPLES)
+    eval_dataset = Subset(full_eval_dataset, eval_indices)
+    del full_eval_dataset
+
+    teacher1 = LlamaForCausalLM.from_pretrained(TEACHER_DIR1)
+    teacher2 = GPT2LMHeadModel.from_pretrained(TEACHER_DIR2)
+    teachers = [teacher1, teacher2]
+    # teachers = [teacher1]
+
+    student = create_student(tokenizer, SEQ_LENGTH)
+
+    print(f"model num parameters: student = {student.num_parameters()}")
+    print(f"model num parameters: teacher1 = {teacher1.num_parameters()}")
+    # print(f"model num parameters: teacher2 = {teacher2.num_parameters()}")
+
 if wandb_log:
     wandb.login()
     wandb.init(project='babylm', name=MODEL_NAME)
