@@ -86,7 +86,7 @@ pip freeze | grep minicons
 # python /home/pl3nt/shared_cfinegan/evaluation-pipeline-2024/sample_pipeline.py
 
 echo "Run eval script"
-/usr/bin/time -v /home/km3nc/babylm/neweval_blimp.sh /home/km3nc/babylm/models/Baby-Llama-58M
+/usr/bin/time -v /home/pl3nt/babylm/neweval_blimp.sh /scratch/nlp_G1/models/student/Baby-Llama-58M_20250412_123437
 
 
 # echo "Run eval script"
