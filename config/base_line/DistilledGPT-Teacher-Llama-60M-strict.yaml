@@ -1,0 +1,28 @@
+data:
+  tokenizer_path: "/scratch/nlp_G1/models/tokenizer/gpt-clean-16000.json"
+  train_path: "/scratch/nlp_G1/data/train_10M_clean"
+  eval_path: "/scratch/nlp_G1/data/dev_clean"
+  seq_length: 128
+  eval_samples: 16384
+
+model:
+  type: "Llama" # or "GPT2"
+  name: "DistilledGPT-Teacher-Llama-60M-strict"
+  hidden_size: 512
+  intermediate_size: 2048 # 2/3 * 4 * hidden_size as in the paper
+  n_layer: 8
+  n_head: 8 
+  tie_word_embeddings: False # Tie word embeddings to match GPT2 size
+
+training:
+  lr: 7e-4
+  batch_size: 128
+  num_epochs: 4
+  gradient_accumulation_steps: 2
+  warmup_steps: 300
+  fp16: True
+
+logging: 
+  wandb: True
+  project: "babylm-dev"
+  output_dir: "/scratch/nlp_G1/models/base_line/"
