@@ -8,7 +8,7 @@
   * Expand by adding random numbers?
 
   2) Can we use KLDivLoss for hidden layers if it is not logits? How to add temperature?
-
+  
   3) Do hyper param search to find which layers are best and what weights work best.
 
 
