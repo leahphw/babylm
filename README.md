@@ -1,16 +1,93 @@
 # BabyLM Challenge Project Proposal
 
 ## Milestone 4
-### Problems/TODOs
-  1) Matching hidden_state size might limit us in teachers. We could find a way to shrink/expand the layers to
-  match the students size. 
-  * Shrink by taking average of surrounding neurons?
-  * Expand by adding random numbers?
+Goal: Ensure meaningful experimentation is happening. ✅
 
-  2) Can we use KLDivLoss for hidden layers if it is not logits? How to add temperature?
-  
-  3) Do hyper param search to find which layers are best and what weights work best.
+Deliverables (Due April 14, 2025):  
+Implemented modifications in a branch of git repository, including documentation on how to run experiments. ✅
 
+### Distillation methods
+#### Contrastive distillation:
+
+* [https://arxiv.org/abs/2212.11353](https://arxiv.org/abs/2212.11353)  
+* Code in: main branch \- contrastive-distillation.py  
+* Total Loss \= L\_lm \+ α \* L\_logits \+ β \* L\_contrastive  
+
+Where:  
+* L\_lm: Standard language modeling loss (cross-entropy)  
+* L\_logits: KL-Divergence between student and teacher logits  
+* L\_logits \= KL(softmax(student\_logits/T) || softmax(teacher\_logits/T)) \* T²  
+* L\_contrastive: Contrastive loss between hidden states
+* L\_contrastive \= \-log(exp(sim(h\_s, h\_t)/τ) / Σ exp(sim(h\_s, h\_t')/τ))
+
+  where sim() is cosine similarity and τ is temperature
+
+Parameters:  
+  * α \= 0.5 (weight for logit distillation)  
+  * β \= 0.1 (weight for contrastive loss)  
+  * T \= 2.0 (temperature for logit distillation)  
+  * τ \= 2.0 (temperature for contrastive loss)
+
+#### DSKD distillation with auxiliary classifiers:
+
+* Code in: main branch \- dskd-distillation-1-teacher.py and dskd-distillation-ensemble.py  
+* Key components:  
+  * Auxiliary classifiers for shallow layers to provide intermediate supervision  
+  * Adaptive weighting strategy for auxiliary classifiers  
+  * Feature map loss and class prediction loss  
+  * Projection layers for feature alignment  
+* Total Loss \= L\_lm \+ α \* L\_class \+ β \* L\_feature \+ γ \* Σ w\_i \* L\_aux\_i  
+
+Where:  
+  * L\_lm: Standard language modeling loss (cross-entropy)  
+  * L\_class: Class prediction loss (KL-Divergence)  
+  * L\_class \= KL(softmax(student\_logits/T) || softmax(teacher\_logits/T)) \* T²  
+  * L\_feature: Feature map loss (MSE)  
+  * L\_feature \= MSE(projected\_student\_features, projected\_teacher\_features)  
+  * L\_aux\_i: Loss from i-th auxiliary classifier  
+  * w\_i: Adaptive weights for auxiliary classifiers  
+
+Parameters:  
+  * α \= 0.5 (weight for class prediction loss)  
+  * β \= 0.5 (weight for feature map loss)  
+  * γ \= 0.1 (weight for auxiliary losses)  
+  * T \= 2.0 (temperature)
+
+
+#### DSKD (Deeply Supervised Knowledge Distillation) without Auxiliary classifiers with a feature mapping using dictionary.
+
+* [https://arxiv.org/pdf/2202.07846](https://arxiv.org/pdf/2202.07846)  
+* You can find the code in dkds-noaux.py.  
+* Loss function: CE(student) \+ **α \*** loss\_logits(teachers’ last layers,student’s last layer) \+ β \* hidden\_loss(teachers’ hidden layers projected to student’s hidden layer)   
+* Loss logits use KL-Divergence and Hidden loss uses MSE.  
+* Since the number of layers are different between teachers and the student, feature projections are used. To solve dimensionality problems use projections (nn.Linear). 
+
+### Results
+
+| Model | BLIMP\_filtered | BLIMP\_supplemental |
+| :---- | :---- | :---- |
+| Baseline | 0.6673 ± 0.0016 | 0.5803 ± 0.0053 |
+| DSKD-a5-b3 | **0.6851 ± 0.0016** | **0.5842 ± 0.0053** |
+| DSKD-a5-b4 | 0.6721 ± 0.0016 | 0.5807 ± 0.0053 |
+| DSKD-a5-b5 | 0.6784 ± 0.0016 | 0.5759 ± 0.0054 |
+| DSKD-a4-b4 | 0.6747 ± 0.0016 | 0.5735 ± 0.0055 |
+| Contrastive-KD | 0.6759 ± 0.0016 | 0.5707 ± 0.0053 |
+| DSKD-teacher-Llama | 0.6468 ± 0.0017 | 0.5421 ± 0.0060 |
+| DSKD-ensemble | 0.6536 ± 0.0017 | 0.5544 ± 0.0058 |
+
+Table 1\. Baseline is a student BabyLlama-58M with teachers of Llama-16M and GPT2-97M. DKDS has no auxiliary classifiers, uses the same model architectures with the approach described above, where a represents alpha (e.g. 5 means 0.5) and b represents beta in the loss function. DSKD-teacher-Llama distills the knowledge from one teacher, Llama-16M using auxiliary classifiers. DSKD-ensemble is an ensemble from two teachers using auxiliary classifiers. Results in bold show the best performance.
+
+* As a result, Deeply Supervised Knowledge distillation outperforms the baseline model which uses vanilla Knowledge distillation on the same architecture.
+
+
+### How to run experiments  
+To train teachers, run sbatch train.slurm which uses train.py. Choose config files of the teachers that you want to teach your student.   
+To run Deeply-Supervised Knowledge Distillation without auxiliary classifiers, run sbatch distill.slurm which uses dkds-noaux.py. Change hyperparameters as needed in dkds-noaux.py. 
+
+### Baseline training
+Our ad-hoc baseline: BabyLlama 58M distilled from GPT-2 97M and Llama 16M with loss function consisting of 50% hard target loss and 50% logit loss.
+
+We are training baselines specified in Milestone 2\# right now.   
 
 
 ## Milestone 3
