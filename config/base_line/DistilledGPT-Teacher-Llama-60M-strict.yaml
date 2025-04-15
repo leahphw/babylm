@@ -8,10 +8,10 @@ data:
 model:
   type: "Llama" # or "GPT2"
   name: "DistilledGPT-Teacher-Llama-60M-strict"
-  hidden_size: 512
+  hidden_size: 530
   intermediate_size: 2048 # 2/3 * 4 * hidden_size as in the paper
-  n_layer: 8
-  n_head: 8 
+  n_layer: 10
+  n_head: 10
   tie_word_embeddings: False # Tie word embeddings to match GPT2 size
 
 training:
