@@ -8,10 +8,10 @@ data:
 model:
   type: "GPT2" 
   name: "DistilledGPT-Teacher-GPT2-44M-strict"
-  hidden_size: 512
+  hidden_size: 504
   intermediate_size: None # train.py uses default = 4 * hidden_size 
-  n_layer: 6
-  n_head: 8
+  n_layer: 12
+  n_head: 12
   resid_pdrop: 0.0 
   attn_pdrop: 0.0
   embd_pdrop: 0.0
