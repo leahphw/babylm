@@ -43,7 +43,7 @@ conda init bash
 
 # Run distillation training
 echo "Starting distillation training..."
-/usr/bin/time -v torchrun --nproc_per_node=2 dkds-exp.py
+/usr/bin/time -v torchrun --nproc_per_node=2 dkds-noaux.py
 
 # Print job end time
 date
