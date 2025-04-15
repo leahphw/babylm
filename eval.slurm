@@ -8,7 +8,7 @@
 #SBATCH --job-name=g1-eval
 #SBATCH --ntasks=1
 #SBATCH --time=01:00:30
-#SBATCH --mail-user=leah.le@richmond.edu
+#SBATCH --mail-user=kasym.manatayev@richmond.edu
 #SBATCH --mail-type=ALL
 
 # Resource Allocation
@@ -36,7 +36,7 @@ cd $SLURM_SUBMIT_DIR
 
 # Change to evaluation pipeline directory
 echo "Changing to evaluation pipeline directory..."
-cd /home/pl3nt/shared_cfinegan/evaluation-pipeline-2024/
+cd /home/km3nc/shared_cfinegan/evaluation-pipeline-2024/
 
 # Initialize conda
 conda init bash
@@ -47,7 +47,7 @@ conda init bash
 
 # Run BLiMP evaluation
 echo "Running BLiMP evaluation..."
-/usr/bin/time -v /home/pl3nt/babylm/eval-blimp.sh /scratch/nlp_G1/models/student/Baby-Llama-58M-DSKD-Ensemble_20250413_135335
+/usr/bin/time -v /home/km3nc/babylm/eval-blimp.sh /scratch/nlp_G1/models/student/Baby-Llama-58M_20250414_195707
 
 # Print job end time
 date
