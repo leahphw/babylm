@@ -7,7 +7,7 @@
 # Job Configuration
 #SBATCH --job-name=g1-train_baseline
 #SBATCH --ntasks=1
-#SBATCH --time=08:00:00
+#SBATCH --time=16:00:00
 #SBATCH --mail-user=jan.stipl@richmond.edu
 #SBATCH --mail-type=ALL
 
@@ -61,6 +61,9 @@ echo "Training DistilledGPT: teacher GPT2-44M..."
 echo "Training DistilledGPT: teacher Llama-60M..."
 /usr/bin/time -v torchrun --nproc_per_node=2 train.py --config ./config/base_line/DistilledGPT-Teacher-Llama-60M-strict.yaml
 
+echo "Distilling DistilledGPT..."
+/usr/bin/time -v ./scripts/distill-DistilledGPT-44M-strict.sh
+
 # Baseline 3 (optional):** BabyLlama-1 (BabyLM 1) and BabyLlama-2 (BabyLM 2)  
 # BabyLlama-1 uses GPT2-705M and Llama-360M as teacher models.
 echo "Training BabyLlama-1: teacher GPT2-705M..."
@@ -69,7 +72,7 @@ echo "Training BabyLlama-1: teacher GPT2-705M..."
 echo "Training BabyLlama-1: teacher Llama-360M..."
 /usr/bin/time -v torchrun --nproc_per_node=2 train.py --config ./config/base_line/BabyLlama1-Teacher-Llama-360M-strict.yaml
 
-
-
+echo "Distilling BabyLlama-1..."
+/usr/bin/time -v ./scripts/distill-BabyLlama1-58M-strict.sh
 # Print job end time
 date
