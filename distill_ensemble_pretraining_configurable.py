@@ -229,7 +229,7 @@ def main():
 
     tokenizer, student, teachers = load_models_from_config(config)
 
-    print(f"model num parameters: student = {student.num_parameters()}")
+    print(f"model num parameters: student {config['student']['name']} = {student.num_parameters()//(10**6)}M")
     for i, teacher in enumerate(teachers):
         teacher_name = config["teachers"][i]["path"].split("/")[-1]
         print(f"model num parameters: teacher {i} {teacher_name} = {teacher.num_parameters()//(10**6)}M")
