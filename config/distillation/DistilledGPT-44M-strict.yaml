@@ -1,0 +1,47 @@
+# Teaching Tiny Minds: Exploring Methods to Enhance Knowledge
+# Distillation for Small Language Models https://aclanthology.org/2024.conll-babylm.27.pdf
+# Not enough info: Using same training section as BabyLlama1-58M-strict
+
+data:
+  tokenizer_path: "/scratch/nlp_G1/models/tokenizer/gpt-clean-16000.json"
+  train_path: "/scratch/nlp_G1/data/train_10M_clean"
+  eval_path: "/scratch/nlp_G1/data/dev_clean"
+  seq_length: 128
+  eval_samples: 8192
+
+student:
+  type: "GPT2" 
+  name: "DistilledGPT-44M-strict"
+  hidden_size: 768
+  intermediate_size: None # train.py uses default = 4 * hidden_size 
+  n_layer: 2
+  n_head: 8
+  resid_pdrop: 0.0 
+  attn_pdrop: 0.0
+  embd_pdrop: 0.0
+  output_dir: "/scratch/nlp_G1/models/base_line/"
+
+teachers:
+  - type: "GPT2"
+    path: "/scratch/nlp_G1/models/base_line/DistilledGPT-Teacher-GPT2-44M-strict"
+  - type: "Llama"
+    path: "/scratch/nlp_G1/models/base_line/DistilledGPT-Teacher-Llama-60M-strict"
+
+training:
+  lr: 2.5e-4
+  batch_size: 32
+  num_epochs: 6
+  gradient_accumulation_steps: 1
+  warmup_steps: 200
+  weight_decay: 0.1
+  fp16: True
+  temperature: 2.0
+  hard_target_loss_weight: 0.5  # ALPHA
+
+
+
+
+
+
+
+  

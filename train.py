@@ -164,8 +164,9 @@ if __name__ == "__main__":
 
     assert torch.cuda.device_count() == 2, "Using too many GPUs, professor will not be happy"
 
-
+    print(f"Training {config['model']['name']}, with {model.num_parameters()//1_000_000}M parameters")
     print(f"Trainer is using device: {trainer.args.device}")
+
     trainer.train()
     trainer.save_model(output_dir)
     tokenizer.save_pretrained(output_dir)
