@@ -15,7 +15,7 @@ student:
   resid_pdrop: 0.0 
   attn_pdrop: 0.0
   embd_pdrop: 0.0
-  output_path: "/scratch/nlp_G1/models/base_line/"
+  output_dir: "/scratch/nlp_G1/models/base_line/"
 
 teachers:
   - type: "GPT2"
