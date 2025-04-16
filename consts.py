@@ -3,7 +3,7 @@ from pathlib import Path
 RANDOM_SEED = 42
 
 DATA_DIR = Path("/scratch/nlp_G1/")
-TEACHER_DIR = DATA_DIR / "models/teacher"
+TEACHER_DIR = DATA_DIR / "models/base_line"
 STUDENT_DIR = DATA_DIR / "models/student"
 TOKENIZER_DIR = DATA_DIR / "models/tokenizer"
 

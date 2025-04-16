@@ -47,7 +47,7 @@ conda init bash
 
 # Run BLiMP evaluation
 echo "Running BLiMP evaluation..."
-/usr/bin/time -v /home/km3nc/babylm/eval-blimp.sh /scratch/nlp_G1/models/student/Baby-Llama-58M_20250414_195707
+/usr/bin/time -v /home/km3nc/babylm/eval-blimp.sh /scratch/nlp_G1/models/student/Baby-Llama-58M-paperbase_20250416_020559
 
 # Print job end time
 date
