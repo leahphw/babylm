@@ -1,271 +1,267 @@
-import torch
 import os
-from datetime import datetime
-from pathlib import Path
-import logging
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.model_selection import ParameterGrid
-import wandb
+import itertools
 import json
+import argparse
+import torch
+import numpy as np
+import wandb
+from datetime import datetime
+from torch.utils.data import Subset
+from torch.distributed import init_process_group, destroy_process_group
 
-# Import your existing classes and modules
 from transformers import (
-    GPT2TokenizerFast,
-    LlamaForCausalLM,
-    LlamaConfig,
-    GPT2LMHeadModel,
+    Trainer,
+    TrainingArguments,
 )
-# Import your custom modules
-from babylm_dataset import BabylmDataset
+
+from distill_ensemble_pretraining_configurable import (
+    check_gpu_availability,
+    load_config,
+    load_dataset,
+    load_models_from_config,
+)
+
+# Import distillation components
+from transformers import Trainer
 import consts
-from dkds_noaux import DeepSupervisionDistillationTrainer, DistillationTrainingArguments
-
-# Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler("grid_search.log"),
-        logging.StreamHandler()
-    ]
+from dkds_noaux import (
+    DistillationTrainingArguments,
+    DeepSupervisionDistillationTrainer,
 )
-logger = logging.getLogger(__name__)
 
-def check_gpu_availability():
-    if torch.cuda.is_available():
-        logger.info(f"Number of GPUs: {torch.cuda.device_count()}")
-        for i in range(torch.cuda.device_count()):
-            logger.info(f"GPU {i}: {torch.cuda.get_device_name(i)}")
-        return True
-    else:
-        logger.error("No GPU found, using CPU.")
-        return False
+def get_args():
+    parser = argparse.ArgumentParser(description="Grid search for distillation weights")
+    parser.add_argument("--config", type=str, required=True, help="Path to config file")
+    parser.add_argument("--output_dir", type=str, required=True, help="Base output directory for saving results")
+    parser.add_argument("--use_wandb", action="store_true", help="Whether to use wandb for logging")
+    parser.add_argument("--wandb_project", type=str, default="distillation-grid-search", help="WandB project name")
+    parser.add_argument("--logit_weights", type=str, default="0.1,0.3,0.5,0.7,0.9", help="Comma-separated logit distillation weights")
+    parser.add_argument("--hidden_weights", type=str, default="0.1,0.3,0.5,0.7,0.9", help="Comma-separated hidden distillation weights")
+    parser.add_argument("--num_epochs", type=int, default=None, help="Override number of epochs in config")
+    parser.add_argument("--batch_size", type=int, default=None, help="Override batch size in config")
+    parser.add_argument("--local_rank", type=int, default=-1, help="Local rank for distributed training")
+    return parser.parse_args()
 
-def run_grid_search():
-    # Check GPU availability
-    if not check_gpu_availability():
-        logger.error("Exiting due to no GPU availability")
-        return
+def setup_distributed():
+    """Initialize the distributed environment."""
+    init_process_group(backend="nccl")
+    torch.cuda.set_device(int(os.environ["LOCAL_RANK"]))
+
+def get_rank():
+    """Get the rank of the current process."""
+    if torch.distributed.is_initialized():
+        return torch.distributed.get_rank()
+    return 0
+
+def is_main_process():
+    """Check if this is the main process."""
+    return get_rank() == 0
+
+def run_grid_search(args):
+    # Load base configuration
+    config = load_config(args.config)
     
-    # Grid search parameters
-    param_grid = {
-        'alpha': [0.3, 0.5, 0.7],  # Weight for traditional KD loss
-        'beta': [0.2, 0.4, 0.6],   # Weight for hidden layer distillation loss
-        'temperature': [1.5, 2.0, 2.5]  # Optional: add temperature to grid search
-    }
+    # Parse grid search parameters
+    logit_weights = [float(w) for w in args.logit_weights.split(",")]
+    hidden_weights = [float(w) for w in args.hidden_weights.split(",")]
     
-    # Fixed hyperparameters
-    BATCH_SIZE = 16  # Reduced batch size for grid search
-    SEQ_LENGTH = 128
-    LR = 2.5e-4
-    EPOCHS = 2  # Reduced epochs for grid search
+    # Create product of all parameter combinations
+    param_grid = list(itertools.product(logit_weights, hidden_weights))
     
-    # Layer mappings 
-    LAYER_MAPPINGS = {
-        'teacher1': {0: 0, 3: 1, 6: 3, 9: 5, 12: 7, 15: 9, 18: 11, 21: 13, 23: 15},
-        'teacher2': {0: 0, 3: 2, 6: 4, 9: 6, 12: 8, 15: 10, 18: 12, 21: 14, 23: 15}
-    }
+    # Create timestamp for unique run ID
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
-    # Load teacher models
-    teacher_dir1 = consts.TEACHER_DIR / "BabyLlama1-Teacher-Llama-360M-strict"
-    teacher_dir2 = consts.TEACHER_DIR / "BabyLlama1-Teacher-GPT2-705M-strict"
-    
-    # Load tokenizer
-    tokenizer_path = consts.TOKENIZER_PATH
-    tokenizer = GPT2TokenizerFast(tokenizer_file=str(tokenizer_path))
-    tokenizer.bos_token = "<s>"
-    tokenizer.eos_token = "</s>"
-    tokenizer.pad_token = "<pad>"
-    tokenizer.model_max_length = SEQ_LENGTH
-    
-    # Load datasets
-    train_dataset = BabylmDataset(consts.TRAIN_DATASET_STRICT_PATH, SEQ_LENGTH, tokenizer=tokenizer, random_chunk=True)
-    full_eval_dataset = BabylmDataset(consts.DEV_DATASET_STRICT_PATH, SEQ_LENGTH, tokenizer=tokenizer, offset=0)
-    
-    # Use a smaller subset for grid search
-    GRID_SEARCH_TRAIN_SIZE = min(10000, len(train_dataset))
-    GRID_SEARCH_EVAL_SIZE = min(2000, len(full_eval_dataset))
-    
-    train_indices = np.random.choice(len(train_dataset), GRID_SEARCH_TRAIN_SIZE, replace=False)
-    eval_indices = np.random.choice(len(full_eval_dataset), GRID_SEARCH_EVAL_SIZE, replace=False)
-    
-    grid_train_dataset = torch.utils.data.Subset(train_dataset, train_indices)
-    grid_eval_dataset = torch.utils.data.Subset(full_eval_dataset, eval_indices)
-    
-    # Create student config
-    config = LlamaConfig(
-        vocab_size=tokenizer.vocab_size,
-        hidden_size=512,
-        num_hidden_layers=16,
-        intermediate_size=1024,
-        num_attention_heads=8,
-        bos_token_id=tokenizer.convert_tokens_to_ids("<s>"),
-        eos_token_id=tokenizer.convert_tokens_to_ids("</s>"),
-        pad_token_id=tokenizer.convert_tokens_to_ids("<pad>"),
-        max_position_embeddings=2*SEQ_LENGTH,
-        output_hidden_states=True,
+    # Setup base output directory
+    base_output_dir = os.path.join(
+        args.output_dir, 
+        f"grid_search_{timestamp}"
     )
     
-    # Initialize data collector
-    data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
+    # Only create directories on the main process
+    if is_main_process():
+        os.makedirs(base_output_dir, exist_ok=True)
+        # Save grid search parameters
+        with open(os.path.join(base_output_dir, "grid_search_params.json"), "w") as f:
+            json.dump({
+                "logit_weights": logit_weights,
+                "hidden_weights": hidden_weights,
+                "timestamp": timestamp,
+                "config_path": args.config
+            }, f, indent=2)
     
-    # Setup for tracking results
-    results = []
+    # Load tokenizer and models once
+    tokenizer, student, teachers = load_models_from_config(config)
     
-    # Optional: Setup WandB for experiment tracking
-    wandb.init(project="knowledge-distillation-grid-search")
+    # Load dataset once
+    train_dataset, eval_dataset, data_collator = load_dataset(config, tokenizer)
     
-    # Run grid search
-    for params in ParameterGrid(param_grid):
-        logger.info(f"Starting run with params: {params}")
+    # Setup layer mappings
+    layer_mappings = {}
+    for i, teacher in enumerate(config["teachers"]):
+        layer_mappings[f'teacher{i+1}'] = teacher["layer_mappings"]
+    
+    # Results dictionary to store metrics
+    results = {}
+    
+    # Loop through parameter combinations
+    for idx, (logit_weight, hidden_weight) in enumerate(param_grid):
+        # Skip combinations that would make weights sum > 1.0
+        # Assuming hard_target_loss_weight is fixed at some value
+        hard_target_weight = config["training"]["hard_target_loss_weight"]
+        if hard_target_weight + logit_weight + hidden_weight > 1.0:
+            if is_main_process():
+                print(f"Skipping combination: logit={logit_weight}, hidden={hidden_weight} as weights sum > 1.0")
+            continue
+            
+        # Run ID for this specific parameter combination
+        run_id = f"logit{logit_weight}_hidden{hidden_weight}"
+        run_output_dir = os.path.join(base_output_dir, run_id)
         
-        # Create unique model name for this run
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        model_name = f'Baby-Llama-58M-gridsearch-a{params["alpha"]}-b{params["beta"]}-t{params["temperature"]}'
-        model_output = consts.GRID_SEARCH_DIR / f"{model_name}_{timestamp}"
+        if is_main_process():
+            print(f"\n{'='*50}")
+            print(f"Running combination {idx+1}/{len(param_grid)}: logit_weight={logit_weight}, hidden_weight={hidden_weight}")
+            print(f"{'='*50}\n")
         
-        # Initialize student model
-        student = LlamaForCausalLM(config)
+        # Initialize wandb if enabled
+        if args.use_wandb and is_main_process():
+            wandb_run = wandb.init(
+                project=args.wandb_project,
+                name=f"{run_id}_{timestamp}",
+                config={
+                    "logit_weight": logit_weight,
+                    "hidden_weight": hidden_weight,
+                    "hard_target_weight": hard_target_weight,
+                    **{k: v for k, v in config["training"].items() if k != "hard_target_loss_weight"}
+                },
+                reinit=True
+            )
         
-        # Load teacher models with output_hidden_states=True
-        teacher1 = LlamaForCausalLM.from_pretrained(teacher_dir1, output_hidden_states=True)
-        teacher2 = GPT2LMHeadModel.from_pretrained(teacher_dir2, output_hidden_states=True)
-        teachers = [teacher1, teacher2]
+        # Update config with the current parameters
+        config["training"]["logit_distillation_loss_weight"] = logit_weight
+        config["training"]["hidden_distillation_loss_weight"] = hidden_weight
         
-        # Print model parameters
-        logger.info(f'Model parameters: student = {student.num_parameters()}')
-        logger.info(f'Model parameters: teacher1 = {teacher1.num_parameters()}')
-        logger.info(f'Model parameters: teacher2 = {teacher2.num_parameters()}')
+        # Override epochs and batch size if specified
+        if args.num_epochs is not None:
+            config["training"]["num_epochs"] = args.num_epochs
+        if args.batch_size is not None:
+            config["training"]["batch_size"] = args.batch_size
         
-        # Setup training arguments
+        # Create copy of student model for this run
+        run_student = type(student)(student.config)
+        run_student.load_state_dict(student.state_dict())
+        
+        # Set up training arguments
         training_args = DistillationTrainingArguments(
-            output_dir=model_output,
+            output_dir=run_output_dir,
             overwrite_output_dir=True,
             save_strategy="epoch",
             eval_strategy="epoch",
-            num_train_epochs=EPOCHS,
-            per_device_train_batch_size=BATCH_SIZE,
+            num_train_epochs=config["training"]["num_epochs"],
+            gradient_accumulation_steps=config["training"]["gradient_accumulation_steps"],
+            per_device_train_batch_size=config["training"]["batch_size"],
             save_total_limit=1,
-            report_to=[],
-            warmup_steps=100,
+            report_to=["wandb"] if args.use_wandb else [],
+            warmup_steps=config["training"]["warmup_steps"],
             lr_scheduler_type="cosine",
-            learning_rate=LR,
-            logging_steps=20,
-            fp16=True,
+            learning_rate=config["training"]["lr"],
+            logging_steps=50,
+            fp16=config["training"]["fp16"],
             load_best_model_at_end=True,
             metric_for_best_model="eval_loss",
-            weight_decay=0.1,
-            alpha=params["alpha"],
-            beta=params["beta"],
-            temperature=params["temperature"],
+            weight_decay=config["training"]["weight_decay"],
+            hard_target_loss_weight=hard_target_weight,
+            logit_distillation_loss_weight=logit_weight,
+            hidden_distillation_loss_weight=hidden_weight,
+            temperature=config["training"]["temperature"],
+            # Distributed training settings
+            local_rank=args.local_rank,
+            ddp_find_unused_parameters=False
         )
         
-        # Initialize trainer
+        # Set up trainer
         trainer = DeepSupervisionDistillationTrainer(
-            student,
+            run_student,
             training_args,
             teacher_models=teachers,
-            layer_mappings=LAYER_MAPPINGS,
+            layer_mappings=layer_mappings,
             data_collator=data_collator,
-            train_dataset=grid_train_dataset,
-            eval_dataset=grid_eval_dataset,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
         )
         
-        # Train model
+        # Train the model
         train_result = trainer.train()
         
-        # Get evaluation metrics
+        # Evaluate the model
         eval_result = trainer.evaluate()
         
-        # Log results
-        run_results = {
-            "alpha": params["alpha"],
-            "beta": params["beta"],
-            "temperature": params["temperature"],
-            "eval_loss": eval_result["eval_loss"],
-            "perplexity": np.exp(eval_result["eval_loss"]),
-            "train_runtime": train_result.metrics["train_runtime"],
+        # Save the model and results only on main process
+        if is_main_process():
+            trainer.save_model(run_output_dir)
+            tokenizer.save_pretrained(run_output_dir)
+            
+            # Log results
+            results[run_id] = {
+                "params": {
+                    "logit_weight": logit_weight, 
+                    "hidden_weight": hidden_weight,
+                    "hard_target_weight": hard_target_weight
+                },
+                "train_results": train_result.metrics,
+                "eval_results": eval_result
+            }
+            
+            # Save results for this run
+            with open(os.path.join(run_output_dir, "results.json"), "w") as f:
+                json.dump(results[run_id], f, indent=2)
+        
+        # Close wandb for this run
+        if args.use_wandb and is_main_process():
+            wandb_run.finish()
+    
+    # Save overall results on main process
+    if is_main_process():
+        # Find best configuration based on eval loss
+        best_run_id = min(results, key=lambda x: results[x]["eval_results"]["eval_loss"])
+        best_params = results[best_run_id]["params"]
+        best_eval_loss = results[best_run_id]["eval_results"]["eval_loss"]
+        
+        summary = {
+            "best_run": best_run_id,
+            "best_params": best_params,
+            "best_eval_loss": best_eval_loss,
+            "all_results": results
         }
         
-        results.append(run_results)
-        logger.info(f"Run completed. Results: {run_results}")
+        with open(os.path.join(base_output_dir, "grid_search_results.json"), "w") as f:
+            json.dump(summary, f, indent=2)
         
-        # Log to WandB
-        wandb.log(run_results)
-        
-        # Save this run's specific results
-        with open(model_output / "grid_search_results.json", "w") as f:
-            json.dump(run_results, f)
+        print("\n" + "="*80)
+        print(f"Grid search completed. Best configuration:")
+        print(f"logit_weight: {best_params['logit_weight']}, hidden_weight: {best_params['hidden_weight']}")
+        print(f"Eval loss: {best_eval_loss}")
+        print("="*80 + "\n")
     
-    # Save all results
-    results_dir = Path("grid_search_results")
-    results_dir.mkdir(exist_ok=True)
-    with open(results_dir / f"all_results_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json", "w") as f:
-        json.dump(results, f)
-    
-    # Find best hyperparameters
-    best_result = min(results, key=lambda x: x["eval_loss"])
-    logger.info(f"Best hyperparameters: {best_result}")
-    
-    # Visualize results
-    visualize_results(results)
-    
-    return best_result
+    # Cleanup distributed processes
+    if torch.distributed.is_initialized():
+        destroy_process_group()
 
-def visualize_results(results):
-    """Create visualizations of grid search results"""
-    # Extract unique parameter values
-    alphas = sorted(set(r["alpha"] for r in results))
-    betas = sorted(set(r["beta"] for r in results))
-    temperatures = sorted(set(r["temperature"] for r in results))
+def main():
+    args = get_args()
     
-    # Create heatmap of eval_loss for each temperature
-    for temp in temperatures:
-        temp_results = [r for r in results if r["temperature"] == temp]
-        loss_matrix = np.zeros((len(alphas), len(betas)))
-        
-        for r in temp_results:
-            i = alphas.index(r["alpha"])
-            j = betas.index(r["beta"])
-            loss_matrix[i, j] = r["eval_loss"]
-        
-        plt.figure(figsize=(10, 8))
-        heatmap = plt.pcolor(loss_matrix, cmap='viridis_r')
-        plt.colorbar(heatmap, label='Eval Loss')
-        
-        plt.xticks(np.arange(len(betas)) + 0.5, betas)
-        plt.yticks(np.arange(len(alphas)) + 0.5, alphas)
-        plt.xlabel('Beta (Hidden State Loss Weight)')
-        plt.ylabel('Alpha (KD Loss Weight)')
-        plt.title(f'Eval Loss Heatmap (Temperature = {temp})')
-        
-        # Save figure
-        plt.savefig(f'heatmap_temp_{temp}.png')
-        plt.close()
+    # Setup distributed training
+    if args.local_rank != -1:
+        setup_distributed()
     
-    # Create summary plot
-    plt.figure(figsize=(12, 8))
-    for temp in temperatures:
-        temp_results = [r for r in results if r["temperature"] == temp]
-        # Sort by alpha, then beta for line plot
-        temp_results.sort(key=lambda x: (x["alpha"], x["beta"]))
-        
-        x_labels = [f"α={r['alpha']},β={r['beta']}" for r in temp_results]
-        losses = [r["eval_loss"] for r in temp_results]
-        
-        plt.plot(x_labels, losses, marker='o', label=f'Temp={temp}')
+    # Check GPU availability
+    check_gpu_availability()
     
-    plt.xticks(rotation=45, ha='right')
-    plt.xlabel('Hyperparameter Combination')
-    plt.ylabel('Evaluation Loss')
-    plt.title('Comparison of Hyperparameter Combinations')
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig('grid_search_summary.png')
-    plt.close()
+    # Set random seed for reproducibility
+    torch.manual_seed(consts.RANDOM_SEED)
+    np.random.seed(consts.RANDOM_SEED)
+    
+    # Run the grid search
+    run_grid_search(args)
 
 if __name__ == "__main__":
-    best_params = run_grid_search()
-    print(f"Best hyperparameters found: alpha={best_params['alpha']}, beta={best_params['beta']}, temperature={best_params['temperature']}")
-    print(f"Best eval loss: {best_params['eval_loss']}, perplexity: {best_params['perplexity']}")
+    main()
