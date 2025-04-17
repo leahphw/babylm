@@ -1,4 +1,5 @@
 import argparse
+from datetime import datetime
 from transformers import (
     GPT2TokenizerFast,
     LlamaForCausalLM,
@@ -114,8 +115,13 @@ def load_config() -> dict:
 
     # Update output path
     output_dir = Path(config["student"]["output_dir"])
-    config["student"]["output_path"] = output_dir / config["student"]["name"]
+    student_name = (
+        f'{config["student"]["name"]}_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
+    )
+
+    config["student"]["output_path"] = output_dir / student_name
     del config["student"]["output_dir"]
+
     return config
 
 
@@ -187,7 +193,42 @@ def load_models_from_config(config: dict):
 
         teachers.append(teacher_model)
 
+    print(
+        f"model num parameters: student {config['student']['name']} = {student.num_parameters()//(10**6)}M"
+    )
+    for i, teacher in enumerate(teachers):
+        teacher_name = config["teachers"][i]["path"].split("/")[-1]
+        print(
+            f"model num parameters: teacher {i} {teacher_name} = {teacher.num_parameters()//(10**6)}M"
+        )
+
     return tokenizer, student, teachers
+
+
+def load_dataset(config: dict, tokenizer: GPT2TokenizerFast):
+    train_dataset = BabylmDataset(
+        config["data"]["train_path"],
+        config["data"]["seq_length"],
+        tokenizer=tokenizer,
+        random_chunk=True,
+    )
+    full_eval_dataset = BabylmDataset(
+        config["data"]["eval_path"],
+        config["data"]["seq_length"],
+        tokenizer=tokenizer,
+        offset=0,
+    )
+
+    # in the original code I had random_chunk = False
+    # random_chunk=True is expected to improve the model performance a bit
+    eval_indices = sample(range(len(full_eval_dataset)), config["data"]["eval_samples"])
+    eval_dataset = Subset(full_eval_dataset, eval_indices)
+
+    data_collator = DataCollatorForLanguageModeling(
+        tokenizer=tokenizer,
+        mlm=False,
+    )
+    return train_dataset, eval_dataset, data_collator
 
 
 def load_training_args_from_config(config: dict):
@@ -229,33 +270,7 @@ def main():
 
     tokenizer, student, teachers = load_models_from_config(config)
 
-    print(f"model num parameters: student {config['student']['name']} = {student.num_parameters()//(10**6)}M")
-    for i, teacher in enumerate(teachers):
-        teacher_name = config["teachers"][i]["path"].split("/")[-1]
-        print(f"model num parameters: teacher {i} {teacher_name} = {teacher.num_parameters()//(10**6)}M")
-
-    # in the original code I had random_chunk = False
-    # random_chunk=True is expected to improve the model performance a bit
-    train_dataset = BabylmDataset(
-        config["data"]["train_path"],
-        config["data"]["seq_length"],
-        tokenizer=tokenizer,
-        random_chunk=True,
-    )
-    full_eval_dataset = BabylmDataset(
-        config["data"]["eval_path"],
-        config["data"]["seq_length"],
-        tokenizer=tokenizer,
-        offset=0,
-    )
-
-    eval_indices = sample(range(len(full_eval_dataset)), config["data"]["eval_samples"])
-    eval_dataset = Subset(full_eval_dataset, eval_indices)
-
-    data_collator = DataCollatorForLanguageModeling(
-        tokenizer=tokenizer,
-        mlm=False,
-    )
+    train_dataset, eval_dataset, data_collator = load_dataset(config, tokenizer)
 
     training_args = load_training_args_from_config(config)
 
