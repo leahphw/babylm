@@ -196,6 +196,7 @@ def load_models_from_config(config: dict):
     print(
         f"model num parameters: student {config['student']['name']} = {student.num_parameters()//(10**6)}M"
     )
+    print(f"Student save directory: {config['student']['output_path']}")
     for i, teacher in enumerate(teachers):
         teacher_name = config["teachers"][i]["path"].split("/")[-1]
         print(
