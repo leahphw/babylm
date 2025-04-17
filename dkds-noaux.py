@@ -24,16 +24,25 @@ class FeatureProjection(nn.Module):
     def __init__(self, teacher_dim, student_dim):
         super().__init__()
         self.proj = nn.Linear(student_dim, teacher_dim)
-        
+
     def forward(self, x):
         return self.proj(x)
 
 
 class DistillationTrainingArguments(TrainingArguments):
-    def __init__(self, *args, alpha=0.5, beta=0.4, temperature=2.0, **kwargs):
+    def __init__(
+        self,
+        *args,
+        hard_target_loss_weight=1.0,
+        logit_distillation_loss_weight=0.5,
+        hidden_distillation_loss_weight=0.4,
+        temperature=2.0,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
-        self.alpha = alpha
-        self.beta = beta
+        self.hard_target_loss_weight = hard_target_loss_weight
+        self.logit_distillation_loss_weight = logit_distillation_loss_weight
+        self.hidden_distillation_loss_weight = hidden_distillation_loss_weight
         self.temperature = temperature
 
 
@@ -222,7 +231,7 @@ def main():
 
     layer_mappings = {}
     for i,teacher in enumerate(config["teachers"]):
-        layer_mappings[f'teacher{i+1}'] = [teacher]["layer_mappings"]
+        layer_mappings[f'teacher{i+1}'] = teacher["layer_mappings"]
 
 
     trainer = DeepSupervisionDistillationTrainer(
