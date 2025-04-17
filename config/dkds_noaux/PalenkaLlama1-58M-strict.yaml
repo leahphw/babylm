@@ -1,0 +1,46 @@
+data:
+  tokenizer_path: "/scratch/nlp_G1/models/tokenizer/gpt-clean-16000.json"
+  train_path: "/scratch/nlp_G1/data/train_10M_clean"
+  eval_path: "/scratch/nlp_G1/data/dev_clean"
+  seq_length: 128
+  eval_samples: 8192
+
+student:
+  type: "Llama" 
+  name: "PalenkaLlama1-58M-strict"
+  hidden_size: 512
+  intermediate_size: 1024 
+  n_layer: 16
+  n_head: 8
+  resid_pdrop: 0.0 
+  attn_pdrop: 0.0
+  embd_pdrop: 0.0
+  output_dir: "/scratch/nlp_G1/models/base_line/"
+
+teachers:
+  - type: "GPT2"
+    path: "/scratch/nlp_G1/models/teacher/GPT2-97M"
+    layer_mappings: {0: 0, 1: 1, 2: 3, 3: 4, 4: 6, 5: 7, 6: 9, 7: 10, 8: 12, 9: 13, 10: 14, 11: 15}  # GPT2-97M to Student
+  - type: "Llama"
+    path: "/scratch/nlp_G1/models/teacher/Llama-16M"
+    layer_mappings: {0: 0, 1: 2, 2: 4, 3: 6, 4: 8, 5: 10, 6: 12, 7: 14} # Llama-16M to Student
+
+
+training:
+  lr: 2.5e-4
+  batch_size: 32
+  num_epochs: 6
+  gradient_accumulation_steps: 1
+  warmup_steps: 200
+  weight_decay: 0.1
+  fp16: True
+  temperature: 2.0
+  hard_target_loss_weight: 1.0  
+  logit_distillation_loss_weight: 0.5  
+  hidden_distillation_loss_weight: 0.4  
+
+
+
+
+
+  
