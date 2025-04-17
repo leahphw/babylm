@@ -1,105 +1,22 @@
 from transformers import (
-    GPT2TokenizerFast,
-    LlamaForCausalLM,
-    LlamaConfig,
-    GPT2LMHeadModel,
     Trainer,
     TrainingArguments,
-    DataCollatorForLanguageModeling,
 )
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import Subset
-from random import sample
-import os
-from datetime import datetime
-os.environ["WANDB_DISABLED"] = "true"
-from pathlib import Path
+
+from distill_ensemble_pretraining_configurable import (
+    check_gpu_availability,
+    load_config,
+    load_dataset,
+    load_models_from_config,
+    load_training_args_from_config,
+)
+
 import random
 
-from babylm_dataset import BabylmDataset
 import consts
-
-def check_gpu_availability():
-    if torch.cuda.is_available():
-        print(f"Number of GPUs: {torch.cuda.device_count()}")
-        for i in range(torch.cuda.device_count()):
-            print(f"GPU {i}: {torch.cuda.get_device_name(i)}")
-    else:
-        print("No GPU found, using CPU.")
-        print("Exiting")
-        exit(1)
-
-check_gpu_availability()
-random.seed(consts.RANDOM_SEED)
-
-#############
-LR = 2.5e-4
-BATCH_SIZE = 32
-SEQ_LENGTH = 128
-
-TEMPERATURE = 2.0
-ALPHA = 0.5  # Weight for traditional KD loss
-BETA = 0.4   # Weight for hidden layer distillation loss
-LAYER_MAPPINGS = {
-    'teacher1': {0: 0, 1: 2, 2: 4, 3: 6, 4: 8, 5: 10, 6: 12, 7: 14},  # Llama-16M to Student
-    'teacher2': {0: 0, 1: 1, 2: 3, 3: 4, 4: 6, 5: 7, 6: 9, 7: 10, 8: 12, 9: 13, 10: 14, 11: 15}  # GPT2-97M to Student
-}
-#############
-
-
-teacher_dir1 = consts.TEACHER_DIR / "Llama-16M"
-teacher_dir2 = consts.TEACHER_DIR / "GPT2-97M"
-
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-MODEL_NAME = f'Baby-Llama-58M'
-MODEL_OUTPUT = consts.STUDENT_DIR / f"{MODEL_NAME}_{timestamp}"
-EVAL_SAMPLES = 8192
-
-
-tokenizer_path = consts.TOKENIZER_PATH
-tokenizer = GPT2TokenizerFast(tokenizer_file=str(tokenizer_path))
-tokenizer.bos_token = "<s>"
-tokenizer.eos_token = "</s>"
-tokenizer.pad_token = "<pad>"
-
-train_dataset = BabylmDataset(consts.TRAIN_DATASET_STRICT_PATH, SEQ_LENGTH, tokenizer=tokenizer, random_chunk=True)
-full_eval_dataset = BabylmDataset(consts.DEV_DATASET_STRICT_PATH, SEQ_LENGTH, tokenizer=tokenizer, offset=0)
-
-eval_indices = sample(range(len(full_eval_dataset)), EVAL_SAMPLES)
-eval_dataset = Subset(full_eval_dataset, eval_indices)
-
-tokenizer.model_max_length = SEQ_LENGTH
-
-config = LlamaConfig(
-    vocab_size=tokenizer.vocab_size,
-    hidden_size=512,
-    num_hidden_layers=16,
-    intermediate_size=1024,
-    num_attention_heads=8,
-    bos_token_id=tokenizer.convert_tokens_to_ids("<s>"),
-    eos_token_id=tokenizer.convert_tokens_to_ids("</s>"),
-    pad_token_id=tokenizer.convert_tokens_to_ids("<pad>"),
-    max_position_embeddings=2*SEQ_LENGTH,
-    output_hidden_states=True,  # Enable output of hidden states
-)
-
-# Initialize student model with output_hidden_states=True
-student = LlamaForCausalLM(config)
-
-# Load teacher models with output_hidden_states=True
-teacher1 = LlamaForCausalLM.from_pretrained(teacher_dir1, output_hidden_states=True)
-teacher2 = GPT2LMHeadModel.from_pretrained(teacher_dir2, output_hidden_states=True)
-teachers = [teacher1, teacher2]
-
-data_collator = DataCollatorForLanguageModeling(
-    tokenizer=tokenizer, mlm=False,
-)
-
-print(f'model num parameters: student = {student.num_parameters()}')
-print(f'model num parameters: teacher1 = {teacher1.num_parameters()}')
-print(f'model num parameters: teacher2 = {teacher2.num_parameters()}')
 
 
 # Projection layers for feature alignment between different architectures
@@ -107,16 +24,25 @@ class FeatureProjection(nn.Module):
     def __init__(self, teacher_dim, student_dim):
         super().__init__()
         self.proj = nn.Linear(student_dim, teacher_dim)
-        
+
     def forward(self, x):
         return self.proj(x)
 
 
 class DistillationTrainingArguments(TrainingArguments):
-    def __init__(self, *args, alpha=0.5, beta=0.4, temperature=2.0, **kwargs):
+    def __init__(
+        self,
+        *args,
+        hard_target_loss_weight=1.0,
+        logit_distillation_loss_weight=0.5,
+        hidden_distillation_loss_weight=0.4,
+        temperature=2.0,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
-        self.alpha = alpha
-        self.beta = beta
+        self.hard_target_loss_weight = hard_target_loss_weight
+        self.logit_distillation_loss_weight = logit_distillation_loss_weight
+        self.hidden_distillation_loss_weight = hidden_distillation_loss_weight
         self.temperature = temperature
 
 
@@ -234,54 +160,95 @@ class DeepSupervisionDistillationTrainer(Trainer):
         
         # Combine losses: original CE loss + KD loss + hidden state loss
         loss = (
-            student_loss + 
-            self.args.alpha * loss_logits + 
-            self.args.beta * hidden_loss
+            self.args.hard_target_loss_weight * student_loss +
+            self.args.logit_distillation_loss_weight *  loss_logits + 
+            self.args.hidden_distillation_loss_weight *  hidden_loss
         )
         
         if return_outputs:
             return loss, outputs_student
         return loss
 
+def load_training_args_from_config(config:dict):
+
+    training_config = config["training"]
+
+    return DistillationTrainingArguments(
+        output_dir=config["student"]["output_path"],
+        overwrite_output_dir=True,
+        save_strategy="epoch",
+        eval_strategy="epoch",
+        num_train_epochs=training_config["num_epochs"],
+        gradient_accumulation_steps=training_config["gradient_accumulation_steps"],
+        per_device_train_batch_size=training_config["batch_size"],
+        save_total_limit=1,
+        report_to=[],
+        warmup_steps=training_config["warmup_steps"],
+        lr_scheduler_type="cosine",
+        learning_rate=training_config["lr"],
+        logging_steps=20,
+        fp16=training_config["fp16"],
+        load_best_model_at_end=True,
+        metric_for_best_model="eval_loss",
+        weight_decay=training_config["weight_decay"],
+        hard_target_loss_weight=training_config["hard_target_loss_weight"],
+        logit_distillation_loss_weight=training_config["logit_distillation_loss_weight"],
+        hidden_distillation_loss_weight=training_config["hidden_distillation_loss_weight"],
+        temperature=training_config["temperature"],
+    )
 
 
-training_args = DistillationTrainingArguments(
-    output_dir=MODEL_OUTPUT,
-    overwrite_output_dir=True,
-    save_strategy="epoch",
-    eval_strategy="epoch",
-    num_train_epochs=6,
-    gradient_accumulation_steps=1,
-    per_device_train_batch_size=BATCH_SIZE,
-    save_total_limit=1,
-    report_to=[],
-    warmup_steps=200,
-    lr_scheduler_type="cosine",
-    learning_rate=LR,
-    logging_steps=20,
-    fp16=True,
-    load_best_model_at_end=True,
-    metric_for_best_model="eval_loss",
-    weight_decay=0.1,
-    alpha=ALPHA,
-    beta=BETA,
-    temperature=TEMPERATURE,
-)
+#############
+# LR = 2.5e-4
+# BATCH_SIZE = 32
+# SEQ_LENGTH = 128
+
+# TEMPERATURE = 2.0
+# ALPHA = 0.5  # Weight for traditional KD loss
+# BETA = 0.4   # Weight for hidden layer distillation loss
+# LAYER_MAPPINGS = {
+#     'teacher1': {0: 0, 1: 2, 2: 4, 3: 6, 4: 8, 5: 10, 6: 12, 7: 14},  # Llama-16M to Student
+#     'teacher2': {0: 0, 1: 1, 2: 3, 3: 4, 4: 6, 5: 7, 6: 9, 7: 10, 8: 12, 9: 13, 10: 14, 11: 15}  # GPT2-97M to Student
+# }
+#############
 
 
-trainer = DeepSupervisionDistillationTrainer(
-    student,
-    training_args,
-    teacher_models=teachers,
-    layer_mappings=LAYER_MAPPINGS,
-    data_collator=data_collator,
-    train_dataset=train_dataset,
-    eval_dataset=eval_dataset,
-)
+def main():
+
+    config = load_config()
+    check_gpu_availability()
+    random.seed(consts.RANDOM_SEED)
+    wandb_log = False
+    if wandb_log:
+        wandb.login()
+        wandb.init(project="babylm", name=config["student"]["name"])
+
+    tokenizer, student, teachers = load_models_from_config(config)
+
+    train_dataset, eval_dataset, data_collator = load_dataset(config, tokenizer)
+
+    training_args = load_training_args_from_config(config)
+
+    layer_mappings = {}
+    for i,teacher in enumerate(config["teachers"]):
+        layer_mappings[f'teacher{i+1}'] = teacher["layer_mappings"]
 
 
-trainer.train()
+    trainer = DeepSupervisionDistillationTrainer(
+        student,
+        training_args,
+        teacher_models=teachers,
+        layer_mappings=layer_mappings,
+        data_collator=data_collator,
+        train_dataset=train_dataset,
+        eval_dataset=eval_dataset,
+    )
+
+    trainer.train()
+
+    trainer.save_model(config["student"]["output_path"])
+    tokenizer.save_pretrained(config["student"]["output_path"])
 
 
-trainer.save_model(MODEL_OUTPUT)
-tokenizer.save_pretrained(MODEL_OUTPUT)
+if __name__ == "__main__":
+    main()
