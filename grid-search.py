@@ -14,7 +14,7 @@ from transformers import (
     TrainingArguments,
 )
 
-from distill_ensemble_pretraining_configurable import (
+from configurable import (
     check_gpu_availability,
     load_config,
     load_dataset,
@@ -108,10 +108,6 @@ def run_grid_search(args):
         # Skip combinations that would make weights sum > 1.0
         # Assuming hard_target_loss_weight is fixed at some value
         hard_target_weight = config["training"]["hard_target_loss_weight"]
-        if hard_target_weight + logit_weight + hidden_weight > 1.0:
-            if is_main_process():
-                print(f"Skipping combination: logit={logit_weight}, hidden={hidden_weight} as weights sum > 1.0")
-            continue
             
         # Run ID for this specific parameter combination
         run_id = f"logit{logit_weight}_hidden{hidden_weight}"
