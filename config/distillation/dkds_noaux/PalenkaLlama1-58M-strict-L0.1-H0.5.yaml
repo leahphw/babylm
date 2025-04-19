@@ -7,7 +7,7 @@ data:
 
 student:
   type: "Llama" 
-  name: "PalenkaLlama1-58M-strict"
+  name: "PalenkaLlama1-58M-strict-L0.1-H0.5"
   hidden_size: 512
   intermediate_size: 1024 
   n_layer: 16
@@ -19,12 +19,11 @@ student:
 
 teachers:
   - type: "GPT2"
-    path: "/scratch/nlp_G1/models/teacher/GPT2-97M"
-    layer_mappings: {0: 0, 1: 1, 2: 3, 3: 4, 4: 6, 5: 7, 6: 9, 7: 10, 8: 12, 9: 13, 10: 14, 11: 15}  # GPT2-97M to Student
+    path: "/scratch/nlp_G1/models/base_line/BabyLlama1-Teacher-GPT2-705M-strict"
+    layer_mappings: {0: 0, 3: 2, 6: 4, 9: 6, 12: 8, 15: 10, 18: 12, 21: 14, 23: 15}  # GPT2-705M to Student
   - type: "Llama"
-    path: "/scratch/nlp_G1/models/teacher/Llama-16M"
-    layer_mappings: {0: 0, 1: 2, 2: 4, 3: 6, 4: 8, 5: 10, 6: 12, 7: 14} # Llama-16M to Student
-
+    path: "/scratch/nlp_G1/models/base_line/BabyLlama1-Teacher-Llama-360M-strict"
+    layer_mappings: {0: 0, 3: 1, 6: 3, 9: 5, 12: 7, 15: 9, 18: 11, 21: 13, 23: 15}  # Llama-360M to Student
 
 training:
   lr: 2.5e-4
@@ -36,8 +35,8 @@ training:
   fp16: True
   temperature: 2.0
   hard_target_loss_weight: 1.0  
-  logit_distillation_loss_weight: 0.5  
-  hidden_distillation_loss_weight: 0.4  
+  logit_distillation_loss_weight: 0.1
+  hidden_distillation_loss_weight: 0.5
 
 
 
