@@ -1,0 +1,30 @@
+# Teaching Tiny Minds: Exploring Methods to Enhance Knowledge
+# Distillation for Small Language Models https://aclanthology.org/2024.conll-babylm.27.pdf
+data:
+  tokenizer_path: "/scratch/nlp_G1/models/tokenizer/gpt-clean-16000.json"
+  train_path: "/scratch/nlp_G1/data/train_10M_clean"
+  eval_path: "/scratch/nlp_G1/data/dev_clean"
+  seq_length: 128
+  eval_samples: 16384
+
+model:
+  type: "Llama" # or "GPT2"
+  name: "Llama-60M-strict"
+  hidden_size: 768  
+  intermediate_size: 2048 # 2/3 * 4 * hidden_size as in the paper
+  n_layer: 2
+  n_head: 8
+  tie_word_embeddings: False # Tie word embeddings to match GPT2 size
+
+training:
+  lr: 3e-4
+  batch_size: 128
+  num_epochs: 10
+  gradient_accumulation_steps: 1
+  warmup_steps: 300
+  fp16: True
+
+logging: 
+  wandb: True
+  project: "babylm-dev"
+  output_dir: "/scratch/nlp_G1/models/base_line/"
