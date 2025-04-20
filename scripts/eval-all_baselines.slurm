@@ -49,8 +49,12 @@ conda init bash
 
 ## Eval 
 
-# Baseline 1: GPT-2 Small  
+# Baseline 1: GPT-2 Small and 10 epochs of all teachers
+/usr/bin/time -v ./scripts/eval-all.sh /scratch/nlp_G1/models/base_line/GPT2-44M-strict
 /usr/bin/time -v ./scripts/eval-all.sh /scratch/nlp_G1/models/base_line/GPT2-small-97M-strict
+/usr/bin/time -v ./scripts/eval-all.sh /scratch/nlp_G1/models/base_line/GPT2-705M-strict
+/usr/bin/time -v ./scripts/eval-all.sh /scratch/nlp_G1/models/base_line/Llama-60M-strict
+/usr/bin/time -v ./scripts/eval-all.sh /scratch/nlp_G1/models/base_line/Llama-360M-strict
 
 
 # # Baseline 2: DistilledGPT
