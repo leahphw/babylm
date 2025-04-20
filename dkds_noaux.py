@@ -31,75 +31,75 @@ def check_gpu_availability():
         print("Exiting")
         exit(1)
 
-check_gpu_availability()
-random.seed(consts.RANDOM_SEED)
+# check_gpu_availability()
+# random.seed(consts.RANDOM_SEED)
 
-#############
-LR = 2.5e-4
-BATCH_SIZE = 32
-SEQ_LENGTH = 128
+# #############
+# LR = 2.5e-4
+# BATCH_SIZE = 32
+# SEQ_LENGTH = 128
 
-TEMPERATURE = 2.0
-ALPHA = 0.5  # Weight for traditional KD loss
-BETA = 0.4   # Weight for hidden layer distillation loss
-LAYER_MAPPINGS = {
-    'teacher1': {0: 0, 3: 1, 6: 3, 9: 5, 12: 7, 15: 9, 18: 11, 21: 13, 23: 15},  # Llama-360M to Student
-    'teacher2': {0: 0, 3: 2, 6: 4, 9: 6, 12: 8, 15: 10, 18: 12, 21: 14, 23: 15}  # GPT2-705M to Student
-}
-#############
-
-
-teacher_dir1 = consts.TEACHER_DIR / "BabyLlama1-Teacher-Llama-360M-strict"
-teacher_dir2 = consts.TEACHER_DIR / "BabyLlama1-Teacher-GPT2-705M-strict"
-
-timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-MODEL_NAME = f'Baby-Llama-58M-noaux-base'
-MODEL_OUTPUT = consts.STUDENT_DIR / f"{MODEL_NAME}_{timestamp}"
-EVAL_SAMPLES = 8192
+# TEMPERATURE = 2.0
+# ALPHA = 0.5  # Weight for traditional KD loss
+# BETA = 0.4   # Weight for hidden layer distillation loss
+# LAYER_MAPPINGS = {
+#     'teacher1': {0: 0, 3: 1, 6: 3, 9: 5, 12: 7, 15: 9, 18: 11, 21: 13, 23: 15},  # Llama-360M to Student
+#     'teacher2': {0: 0, 3: 2, 6: 4, 9: 6, 12: 8, 15: 10, 18: 12, 21: 14, 23: 15}  # GPT2-705M to Student
+# }
+# #############
 
 
-tokenizer_path = consts.TOKENIZER_PATH
-tokenizer = GPT2TokenizerFast(tokenizer_file=str(tokenizer_path))
-tokenizer.bos_token = "<s>"
-tokenizer.eos_token = "</s>"
-tokenizer.pad_token = "<pad>"
+# teacher_dir1 = consts.TEACHER_DIR / "BabyLlama1-Teacher-Llama-360M-strict"
+# teacher_dir2 = consts.TEACHER_DIR / "BabyLlama1-Teacher-GPT2-705M-strict"
 
-train_dataset = BabylmDataset(consts.TRAIN_DATASET_STRICT_PATH, SEQ_LENGTH, tokenizer=tokenizer, random_chunk=True)
-full_eval_dataset = BabylmDataset(consts.DEV_DATASET_STRICT_PATH, SEQ_LENGTH, tokenizer=tokenizer, offset=0)
+# timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+# MODEL_NAME = f'Baby-Llama-58M-noaux-base'
+# MODEL_OUTPUT = consts.STUDENT_DIR / f"{MODEL_NAME}_{timestamp}"
+# EVAL_SAMPLES = 8192
 
-eval_indices = sample(range(len(full_eval_dataset)), EVAL_SAMPLES)
-eval_dataset = Subset(full_eval_dataset, eval_indices)
 
-tokenizer.model_max_length = SEQ_LENGTH
+# tokenizer_path = consts.TOKENIZER_PATH
+# tokenizer = GPT2TokenizerFast(tokenizer_file=str(tokenizer_path))
+# tokenizer.bos_token = "<s>"
+# tokenizer.eos_token = "</s>"
+# tokenizer.pad_token = "<pad>"
 
-config = LlamaConfig(
-    vocab_size=tokenizer.vocab_size,
-    hidden_size=512,
-    num_hidden_layers=16,
-    intermediate_size=1024,
-    num_attention_heads=8,
-    bos_token_id=tokenizer.convert_tokens_to_ids("<s>"),
-    eos_token_id=tokenizer.convert_tokens_to_ids("</s>"),
-    pad_token_id=tokenizer.convert_tokens_to_ids("<pad>"),
-    max_position_embeddings=2*SEQ_LENGTH,
-    output_hidden_states=True,  # Enable output of hidden states
-)
+# train_dataset = BabylmDataset(consts.TRAIN_DATASET_STRICT_PATH, SEQ_LENGTH, tokenizer=tokenizer, random_chunk=True)
+# full_eval_dataset = BabylmDataset(consts.DEV_DATASET_STRICT_PATH, SEQ_LENGTH, tokenizer=tokenizer, offset=0)
 
-# Initialize student model with output_hidden_states=True
-student = LlamaForCausalLM(config)
+# eval_indices = sample(range(len(full_eval_dataset)), EVAL_SAMPLES)
+# eval_dataset = Subset(full_eval_dataset, eval_indices)
 
-# Load teacher models with output_hidden_states=True
-teacher1 = LlamaForCausalLM.from_pretrained(teacher_dir1, output_hidden_states=True)
-teacher2 = GPT2LMHeadModel.from_pretrained(teacher_dir2, output_hidden_states=True)
-teachers = [teacher1, teacher2]
+# tokenizer.model_max_length = SEQ_LENGTH
 
-data_collator = DataCollatorForLanguageModeling(
-    tokenizer=tokenizer, mlm=False,
-)
+# config = LlamaConfig(
+#     vocab_size=tokenizer.vocab_size,
+#     hidden_size=512,
+#     num_hidden_layers=16,
+#     intermediate_size=1024,
+#     num_attention_heads=8,
+#     bos_token_id=tokenizer.convert_tokens_to_ids("<s>"),
+#     eos_token_id=tokenizer.convert_tokens_to_ids("</s>"),
+#     pad_token_id=tokenizer.convert_tokens_to_ids("<pad>"),
+#     max_position_embeddings=2*SEQ_LENGTH,
+#     output_hidden_states=True,  # Enable output of hidden states
+# )
 
-print(f'model num parameters: student = {student.num_parameters()}')
-print(f'model num parameters: teacher1 = {teacher1.num_parameters()}')
-print(f'model num parameters: teacher2 = {teacher2.num_parameters()}')
+# # Initialize student model with output_hidden_states=True
+# student = LlamaForCausalLM(config)
+
+# # Load teacher models with output_hidden_states=True
+# teacher1 = LlamaForCausalLM.from_pretrained(teacher_dir1, output_hidden_states=True)
+# teacher2 = GPT2LMHeadModel.from_pretrained(teacher_dir2, output_hidden_states=True)
+# teachers = [teacher1, teacher2]
+
+# data_collator = DataCollatorForLanguageModeling(
+#     tokenizer=tokenizer, mlm=False,
+# )
+
+# print(f'model num parameters: student = {student.num_parameters()}')
+# print(f'model num parameters: teacher1 = {teacher1.num_parameters()}')
+# print(f'model num parameters: teacher2 = {teacher2.num_parameters()}')
 
 
 # Projection layers for feature alignment between different architectures
@@ -113,10 +113,11 @@ class FeatureProjection(nn.Module):
 
 
 class DistillationTrainingArguments(TrainingArguments):
-    def __init__(self, *args, alpha=0.5, beta=0.4, temperature=2.0, **kwargs):
+    def __init__(self, *args, logit_distillation_loss_weight=0.5,  hidden_distillation_loss_weight=0.4, temperature=2.0, hard_target_loss_weight = 1, **kwargs):
         super().__init__(*args, **kwargs)
-        self.alpha = alpha
-        self.beta = beta
+        self.logit_distillation_loss_weight = logit_distillation_loss_weight
+        self.hard_target_loss_weight = hard_target_loss_weight
+        self.hidden_distillation_loss_weight = hidden_distillation_loss_weight
         self.temperature = temperature
 
 
@@ -235,8 +236,8 @@ class DeepSupervisionDistillationTrainer(Trainer):
         # Combine losses: original CE loss + KD loss + hidden state loss
         loss = (
             student_loss + 
-            self.args.alpha * loss_logits + 
-            self.args.beta * hidden_loss
+            self.args.logit_distillation_loss_weight * loss_logits + 
+            self.args.hidden_distillation_loss_weight * hidden_loss
         )
         
         if return_outputs:
@@ -245,43 +246,43 @@ class DeepSupervisionDistillationTrainer(Trainer):
 
 
 
-training_args = DistillationTrainingArguments(
-    output_dir=MODEL_OUTPUT,
-    overwrite_output_dir=True,
-    save_strategy="epoch",
-    eval_strategy="epoch",
-    num_train_epochs=6,
-    gradient_accumulation_steps=1,
-    per_device_train_batch_size=BATCH_SIZE,
-    save_total_limit=1,
-    report_to=[],
-    warmup_steps=200,
-    lr_scheduler_type="cosine",
-    learning_rate=LR,
-    logging_steps=20,
-    fp16=True,
-    load_best_model_at_end=True,
-    metric_for_best_model="eval_loss",
-    weight_decay=0.1,
-    alpha=ALPHA,
-    beta=BETA,
-    temperature=TEMPERATURE,
-)
+# training_args = DistillationTrainingArguments(
+#     output_dir=MODEL_OUTPUT,
+#     overwrite_output_dir=True,
+#     save_strategy="epoch",
+#     eval_strategy="epoch",
+#     num_train_epochs=6,
+#     gradient_accumulation_steps=1,
+#     per_device_train_batch_size=BATCH_SIZE,
+#     save_total_limit=1,
+#     report_to=[],
+#     warmup_steps=200,
+#     lr_scheduler_type="cosine",
+#     learning_rate=LR,
+#     logging_steps=20,
+#     fp16=True,
+#     load_best_model_at_end=True,
+#     metric_for_best_model="eval_loss",
+#     weight_decay=0.1,
+#     alpha=ALPHA,
+#     beta=BETA,
+#     temperature=TEMPERATURE,
+# )
 
 
-trainer = DeepSupervisionDistillationTrainer(
-    student,
-    training_args,
-    teacher_models=teachers,
-    layer_mappings=LAYER_MAPPINGS,
-    data_collator=data_collator,
-    train_dataset=train_dataset,
-    eval_dataset=eval_dataset,
-)
+# trainer = DeepSupervisionDistillationTrainer(
+#     student,
+#     training_args,
+#     teacher_models=teachers,
+#     layer_mappings=LAYER_MAPPINGS,
+#     data_collator=data_collator,
+#     train_dataset=train_dataset,
+#     eval_dataset=eval_dataset,
+# )
 
 
-trainer.train()
+# trainer.train()
 
 
-trainer.save_model(MODEL_OUTPUT)
-tokenizer.save_pretrained(MODEL_OUTPUT)
+# trainer.save_model(MODEL_OUTPUT)
+# tokenizer.save_pretrained(MODEL_OUTPUT)

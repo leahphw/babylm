@@ -70,7 +70,7 @@ def run_grid_search(args):
     param_grid = [(l,h) for l in logit_weights for h in hidden_weights]
 
     half = len(param_grid) // 2
-    first_half = param_grid[:half]
+    second_half = param_grid[half:]
 
     
     # Create timestamp for unique run ID
@@ -117,7 +117,7 @@ def run_grid_search(args):
     results = {}
     
     # Loop through parameter combinations
-    for idx, (logit_weight, hidden_weight) in enumerate(first_half):
+    for idx, (logit_weight, hidden_weight) in enumerate(second_half):
         # Skip combinations that would make weights sum > 1.0
         # Assuming hard_target_loss_weight is fixed at some value
         hard_target_weight = config["training"]["hard_target_loss_weight"]
@@ -128,7 +128,7 @@ def run_grid_search(args):
         
         if is_main_process():
             print(f"\n{'='*50}")
-            print(f"Running combination {idx+1}/{len(first_half)}: logit_weight={logit_weight}, hidden_weight={hidden_weight}")
+            print(f"Running combination {idx+1}/{len(second_half)}: logit_weight={logit_weight}, hidden_weight={hidden_weight}")
             print(f"{'='*50}\n")
         
         

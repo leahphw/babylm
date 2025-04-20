@@ -96,7 +96,7 @@ def check_gpu_availability():
         exit(1)
 
     assert (
-        torch.cuda.device_count() == 2
+        torch.cuda.device_count() == 1
     ), "Using too many GPUs, professor will not be happy"
 
 
@@ -106,7 +106,7 @@ def load_config(con: str) -> dict:
     with open(con, "r") as f:
         config = yaml.safe_load(f)
 
-    print(f"Loaded config: {args.config}")
+    print(f"Loaded config: {con}")
 
     # Update output path
     output_dir = Path(config["student"]["output_dir"])
@@ -255,35 +255,35 @@ def load_training_args_from_config(config: dict):
     return args
 
 
-def main():
-    config = load_config()
-    check_gpu_availability()
-    random.seed(consts.RANDOM_SEED)
-    wandb_log = False
-    if wandb_log:
-        wandb.login()
-        wandb.init(project="babylm", name=config["student"]["name"])
+# def main():
+#     config = load_config()
+#     check_gpu_availability()
+#     random.seed(consts.RANDOM_SEED)
+#     wandb_log = False
+#     if wandb_log:
+#         wandb.login()
+#         wandb.init(project="babylm", name=config["student"]["name"])
 
-    tokenizer, student, teachers = load_models_from_config(config)
+#     tokenizer, student, teachers = load_models_from_config(config)
 
-    train_dataset, eval_dataset, data_collator = load_dataset(config, tokenizer)
+#     train_dataset, eval_dataset, data_collator = load_dataset(config, tokenizer)
 
-    training_args = load_training_args_from_config(config)
+#     training_args = load_training_args_from_config(config)
 
-    trainer = DistillationTrainer(
-        student,
-        training_args,
-        teacher_models=teachers,
-        data_collator=data_collator,
-        train_dataset=train_dataset,
-        eval_dataset=eval_dataset,
-    )
+#     trainer = DistillationTrainer(
+#         student,
+#         training_args,
+#         teacher_models=teachers,
+#         data_collator=data_collator,
+#         train_dataset=train_dataset,
+#         eval_dataset=eval_dataset,
+#     )
 
-    trainer.train()
+#     trainer.train()
 
-    trainer.save_model(config["student"]["output_path"])
-    tokenizer.save_pretrained(config["student"]["output_path"])
+#     trainer.save_model(config["student"]["output_path"])
+#     tokenizer.save_pretrained(config["student"]["output_path"])
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
