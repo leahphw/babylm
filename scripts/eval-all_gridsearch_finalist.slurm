@@ -49,16 +49,12 @@ conda init bash
 
 ## Eval 
 
-# Baseline 1: GPT-2 Small  
-/usr/bin/time -v ./scripts/eval-all.sh /scratch/nlp_G1/models/base_line/GPT2-small-97M-strict
 
+/usr/bin/time -v ./scripts/eval-all.sh /scratch/nlp_G1/models/student/PalenkaLlama1-58M-strict-L0.1-H0.1_20250419_165524
 
-# # Baseline 2: DistilledGPT
-/usr/bin/time -v ./scripts/eval-all.sh /scratch/nlp_G1/models/base_line/DistilledGPT-44M-strict
+/usr/bin/time -v ./scripts/eval-all.sh /scratch/nlp_G1/models/student/PalenkaLlama1-58M-strict-L0.1-H0.3_20250419_192616
 
-# Baseline 3 (optional):** BabyLlama-1 (BabyLM 1) and BabyLlama-2 (BabyLM 2)  
-# BabyLlama-1 
-/usr/bin/time -v ./scripts/eval-all.sh /scratch/nlp_G1/models/base_line/BabyLlama1-58M-strict
+/usr/bin/time -v ./scripts/eval-all.sh /scratch/nlp_G1/models/student/PalenkaLlama1-58M-strict-L0.1-H0.5_20250419_215705
 
 
 # Print job end time

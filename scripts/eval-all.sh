@@ -13,7 +13,7 @@ export HF_HOME=/scratch/cfinegan/hf_cache
 # accessed. If the dataset is private or gated, make sure to log in with `huggingface-cli login`
 #  or visit the dataset page at https://huggingface.co/datasets/glue to ask for access.
 
-/usr/bin/time -v python -m lm_eval --model hf \
+python -m lm_eval --model hf \
     --model_args pretrained=$MODEL_PATH,backend="causal" \
     --tasks ewok_filtered,blimp_filtered,blimp_supplement  \
     --device cuda:0,1 \
