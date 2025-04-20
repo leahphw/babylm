@@ -1,8 +1,79 @@
 # BabyLM Challenge Project Proposal
 
-## Milestone 5
+## Final Experiments & Code Submission
+Deliverables (Due April 18, 2025):
+Final version of code in main branch on GitHub. Code should be clean, runnable, and ready for grading. ✅
 
-### Results
+
+### Running code
+#### Scripts provided:
+
+SLURM Job Scripts:
+- `train_baselines.slurm`: Train baseline models (GPT2, DistilledGPT, BabyLlama)
+
+- `train_gridsearch_finalist.slurm`: 
+Train final DSKD models with hyperparameters found by basic grid search
+
+- `eval-blimp_baselines.slurm`: Evaluate models on BLiMP benchmark
+
+- `eval-all_baselines.slurm`: Full evaluation on BLiMP and EWOK
+
+
+Shell Scripts:
+- `eval-blimp.sh`: Run BLiMP evaluation for a single model
+  - Takes model path as argument
+  - Tests grammatical knowledge with BLiMP tasks
+
+- `eval-all.sh`: Run full evaluation suite for a single model
+  - Takes model path as argument
+  - Evaluates on BLiMP + EWOK tasks
+
+- `eval-ewok.sh`: Run EWOK evaluation for a single model
+  - Takes model path as argument
+  - Tests world knowledge with EWOK filtered tasks
+
+- `distill-BabyLlama1-58M-strict.sh`: Train BabyLlama-1 student model
+  - Distills from GPT2-705M and Llama-360M teachers
+
+- `distill-DistilledGPT-44M-strict.sh`: Train DistilledGPT student model  
+  - Distills from GPT2-44M and Llama-60M teachers
+
+- `dkds_noaux-PalenkaLlama1-58M-strict.sh`: Train PalenkaLlama student model
+  - Implements DSKD without auxiliary classifiers
+  - Uses feature mapping between teacher-student layers
+
+#### How to run
+Clone the repo and run slurm scripts.
+Don't forget to update the trained model paths because of timestamps in the names.
+```
+# You have to cd to the scripts directory (relative paths are used)
+cd scripts
+sbatch train_baselines.slurm
+```
+When running on your own you have to update paths in ./config *.yaml files to your 
+folder with train and test data. 
+Train your tokenizer in ./cleaning_and_tokenization.ipynb.
+Install requirements
+```
+pip install -r requirements.txt
+```
+
+* For evaluation 
+https://github.com/babylm/evaluation-pipeline-2024?tab=readme-ov-file#install
+```
+git clone https://github.com/babylm/evaluation-pipeline-2024
+cd evaluation-pipeline-2024
+pip install -e .
+pip install minicons
+pip install --upgrade accelerate
+```
+
+
+
+### Summary of experiments and
+
+### Final Results
+
 |   | model_name                                           | blimp_supplement      | blimp_filtered         | ewok_filtered        |
 |---|------------------------------------------------------|------------------------|-------------------------|------------------------|
 | 0 | BabyLlama1-58M-strict                                | 0.581 ± 0.0054         | 0.676 ± 0.0016          | 0.501 ± 0.0057          |
