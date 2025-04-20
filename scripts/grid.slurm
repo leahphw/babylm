@@ -44,8 +44,8 @@ conda init bash
 echo "Starting distillation training..."
 export CUDA_VISIBLE_DEVICES=1
 python grid_search.py \
-    --config "/home/km3nc/babylm/config/dsllama-58m.yaml" \
-    --output_dir "/home/km3nc/babylm/results" \
+    --config "config/distillation/dkds_noaux/PalenkaLlama1-58M-strict.yaml" \
+    --output_dir "results/" \
     --num_epochs 6 \
     --train_fraction 0.2
 
