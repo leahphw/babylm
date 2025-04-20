@@ -6,7 +6,6 @@ Final version of code in main branch on GitHub. Code should be clean, runnable, 
 
 
 ### Running code
-#### Scripts provided:
 
 SLURM Job Scripts:
 - `train_baselines.slurm`: Train baseline models (GPT2, DistilledGPT, BabyLlama)
@@ -41,7 +40,7 @@ Shell Scripts:
   - Distills from GPT2-44M and Llama-60M teachers
 
 - `dkds_noaux-PalenkaLlama1-58M-strict.sh`: Train PalenkaLlama student model
-  - Implements DSKD without auxiliary classifiers
+  - Distills from GPT2-705M and Llama-360M using DSKD
   - Uses feature mapping between teacher-student layers
 
 #### How to run
@@ -60,7 +59,7 @@ Install requirements
 pip install -r requirements.txt
 ```
 
-* For evaluation 
+For evaluation 
 https://github.com/babylm/evaluation-pipeline-2024?tab=readme-ov-file#install
 ```
 git clone https://github.com/babylm/evaluation-pipeline-2024
@@ -70,9 +69,30 @@ pip install minicons
 pip install --upgrade accelerate
 ```
 
+### Summary of experiments
+We recreated and trained following baselines:
+- Basic
+  - `GPT2-44M`
+  - `GPT2-705M`
+  - `GPT2-small-97M`
+  - `Llama-60M`
+  - `Llama-360M`
 
+Distilled
+- `DistilledGPT-44M`
+  - Teachers: GPT2-44M, Llama-60M
+  - Student: GPT2-44M
+  - Loss functions: 50% hard target loss, 50% logit loss 
+- `BabyLlama-1-58M` 
+  - Teachers: GPT2-705M, Llama-360M 
+  - Student: Llama-60M
+  - Loss functions: 50% hard target loss, 50% logit loss
 
-### Summary of experiments and
+# TODO
+Add links to papers
+Tried distilation methods
+Final Experiments
+
 
 ### Final Results
 
