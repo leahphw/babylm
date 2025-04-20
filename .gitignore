@@ -3,6 +3,7 @@
 /logs
 /wandb
 /drafts
+/results
 
 # sbatch script
 training-run-single-gpu.sh

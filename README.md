@@ -1,5 +1,18 @@
 # BabyLM Challenge Project Proposal
 
+## Milestone 5
+
+### Results
+|   | model_name                                           | blimp_supplement      | blimp_filtered         | ewok_filtered        |
+|---|------------------------------------------------------|------------------------|-------------------------|------------------------|
+| 0 | BabyLlama1-58M-strict                                | 0.581 ± 0.0054         | 0.676 ± 0.0016          | 0.501 ± 0.0057          |
+| 1 | DistilledGPT-44M-strict                              | 0.588 ± 0.0053         | 0.658 ± 0.0016          | 0.500 ± 0.0057          |
+| 2 | GPT2-small-97M-strict                                | 0.596 ± 0.0054         | 0.670 ± 0.0017          | **0.504 ± 0.0057**      |
+| 3 | PalenkaLlama1-58M-strict-L0.1-H0.1_20250419_1600     | 0.596 ± 0.0054         | 0.694 ± 0.0016          | 0.500 ± 0.0057          |
+| 4 | PalenkaLlama1-58M-strict-L0.1-H0.3_20250419_1930     | 0.599 ± 0.0053         | 0.693 ± 0.0016          | 0.499 ± 0.0057          |
+| 5 | PalenkaLlama1-58M-strict-L0.1-H0.5_20250419_2130     | **0.606 ± 0.0050**     | **0.694 ± 0.0016**      | 0.503 ± 0.0057          |
+
+
 ## Milestone 4
 Goal: Ensure meaningful experimentation is happening. ✅
 
