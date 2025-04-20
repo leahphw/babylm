@@ -50,7 +50,6 @@ conda init bash
 ## Train 
 
 # Baseline 1: GPT-2 Small  
-echo "Training GPT-2 small..."
 /usr/bin/time -v ./scripts/eval-blimp.sh /scratch/nlp_G1/models/base_line/GPT2-small-97M-strict
 
 

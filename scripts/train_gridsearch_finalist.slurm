@@ -65,5 +65,3 @@ torchrun --nproc_per_node=2 --master_port=29501 dkds-noaux.py \
 date | tee -a /scratch/nlp_G1/slurm_outrun_H0.1.log \
     /scratch/nlp_G1/slurm_out/run_H0.3.log\
     /scratch/nlp_G1/slurm_out/run_H0.5.log
-
-date
