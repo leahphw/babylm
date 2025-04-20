@@ -18,6 +18,8 @@ Train final DSKD models with hyperparameters found by basic grid search
 
 - `eval-all_baselines.slurm`: Full evaluation on BLiMP and EWOK
 
+- `scripts/grid.slurm`: Distillation parameter grid search
+
 
 Shell Scripts:
 - `eval-blimp.sh`: Run BLiMP evaluation for a single model
