@@ -42,7 +42,7 @@ conda init bash
 
 # Run distillation training
 echo "Starting distillation training..."
-export CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=0,1
 python grid_search.py \
     --config "config/distillation/dkds_noaux/PalenkaLlama1-58M-strict.yaml" \
     --output_dir "results/" \

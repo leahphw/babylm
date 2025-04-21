@@ -1,33 +1,44 @@
 import os
-import itertools
 import json
 import argparse
 import torch
 import numpy as np
+import yaml
 import wandb
+from pathlib import Path
 from datetime import datetime
 from torch.utils.data import Subset
 from torch.distributed import init_process_group, destroy_process_group
 
-from transformers import (
-    Trainer,
-    TrainingArguments,
-)
 
 from distill_ensemble_pretraining_configurable import (
     check_gpu_availability,
-    load_config,
     load_dataset,
     load_models_from_config,
 )
 
-# Import distillation components
-from transformers import Trainer
 import consts
 from dkds_noaux import (
     DistillationTrainingArguments,
     DeepSupervisionDistillationTrainer,
 )
+
+def load_config(con: str) -> dict:
+    with open(con, "r") as f:
+        config = yaml.safe_load(f)
+
+    print(f"Loaded config: {con}")
+
+    # Update output path
+    output_dir = Path(config["student"]["output_dir"])
+    student_name = (
+        f'{config["student"]["name"]}_{datetime.now().strftime("%Y%m%d_%H%M%S")}'
+    )
+
+    config["student"]["output_path"] = output_dir / student_name
+    del config["student"]["output_dir"]
+
+    return config
 
 def get_args():
     parser = argparse.ArgumentParser(description="Grid search for distillation weights")
@@ -69,8 +80,7 @@ def run_grid_search(args):
     # Create product of all parameter combinations
     param_grid = [(l,h) for l in logit_weights for h in hidden_weights]
 
-    half = len(param_grid) // 2
-    second_half = param_grid[half:]
+    second_half = param_grid
 
     
     # Create timestamp for unique run ID
