@@ -76,6 +76,7 @@ pip install --upgrade accelerate
 
 ### Summary of experiments
 We recreated and trained following baselines:
+
 Basic
   - `GPT2-44M`
   - `GPT2-705M`
