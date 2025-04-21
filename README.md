@@ -8,6 +8,7 @@
 Deliverables (Due April 18, 2025):
 Final version of code in main branch on GitHub. Code should be clean, runnable, and ready for grading. ✅
 
+Best trained model: [Google Drive: PalenkaLlama1-58M-strict-L0.1-H0.5](https://drive.google.com/file/d/1_CSX3n7_nMJFDg5nSx54adjB_pNU6_2k/view?usp=sharing)
 
 ### Running code
 
