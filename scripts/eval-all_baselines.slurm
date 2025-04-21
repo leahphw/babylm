@@ -7,7 +7,7 @@
 # Job Configuration
 #SBATCH --job-name=g1-eval_baseline
 #SBATCH --ntasks=1
-#SBATCH --time=16:00:00
+#SBATCH --time=24:00:00
 #SBATCH --mail-user=jan.stipl@richmond.edu
 #SBATCH --mail-type=ALL
 
@@ -15,7 +15,7 @@
 #SBATCH --gres=gpu:tesla_a40:2
 #SBATCH --partition=NLP
 #SBATCH --mem=64000
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=31
 
 # =============================================
 # Environment Setup
@@ -43,22 +43,26 @@ echo "Working dir: $PWD"
 conda init bash
 
 # =============================================
-# Training Execution
+# Eval Execution
 # =============================================
 
 
-## Train 
+## Eval 
 
-# Baseline 1: GPT-2 Small  
-/usr/bin/time -v ./scripts/eval-blimp.sh /scratch/nlp_G1/models/base_line/GPT2-small-97M-strict
+# Baseline 1: GPT-2 Small and 10 epochs of all teachers
+/usr/bin/time -v ./scripts/eval-all.sh /scratch/nlp_G1/models/base_line/GPT2-44M-strict
+/usr/bin/time -v ./scripts/eval-all.sh /scratch/nlp_G1/models/base_line/GPT2-small-97M-strict
+/usr/bin/time -v ./scripts/eval-all.sh /scratch/nlp_G1/models/base_line/GPT2-705M-strict
+/usr/bin/time -v ./scripts/eval-all.sh /scratch/nlp_G1/models/base_line/Llama-60M-strict
+/usr/bin/time -v ./scripts/eval-all.sh /scratch/nlp_G1/models/base_line/Llama-360M-strict
 
 
 # # Baseline 2: DistilledGPT
-/usr/bin/time -v ./scripts/eval-blimp.sh /scratch/nlp_G1/models/base_line/DistilledGPT-44M-strict
+/usr/bin/time -v ./scripts/eval-all.sh /scratch/nlp_G1/models/base_line/DistilledGPT-44M-strict
 
 # Baseline 3 (optional):** BabyLlama-1 (BabyLM 1) and BabyLlama-2 (BabyLM 2)  
 # BabyLlama-1 
-/usr/bin/time -v ./scripts/eval-blimp.sh /scratch/nlp_G1/models/base_line/BabyLlama1-58M-strict
+/usr/bin/time -v ./scripts/eval-all.sh /scratch/nlp_G1/models/base_line/BabyLlama1-58M-strict
 
 
 # Print job end time

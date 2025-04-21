@@ -49,9 +49,13 @@ conda init bash
 
 ## Train 
 
-# Baseline 1: GPT-2 Small  
+# Baseline 1: GPT-2 Small and 10 epochs of all teachers
 echo "Training GPT-2 small..."
+/usr/bin/time -v torchrun --nproc_per_node=2 train.py --config ./config/base_line/GPT2-44M-strict.yaml
+/usr/bin/time -v torchrun --nproc_per_node=2 train.py --config ./config/base_line/GPT2-705M-strict.yaml
 /usr/bin/time -v torchrun --nproc_per_node=2 train.py --config ./config/base_line/GPT2-small-97M-strict.yaml
+/usr/bin/time -v torchrun --nproc_per_node=2 train.py --config ./config/base_line/Llama-60M-strict.yaml
+/usr/bin/time -v torchrun --nproc_per_node=2 train.py --config ./config/base_line/Llama-360M-strict.yaml
 
 # # Baseline 2: DistilledGPT
 # # DistilledGPT uses GPT2-44M and Llama-60M as teacher models.

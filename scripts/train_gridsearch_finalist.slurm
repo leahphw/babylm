@@ -50,20 +50,18 @@ conda init bash
 ## Train 
 set +e  # Don't exit on error
 
-torchrun --nproc_per_node=2 --master_port=29501 dkds-noaux.py \
+torchrun --nproc_per_node=2 --master_port=29501 dkds_noaux.py \
   --config ./config/distillation/dkds_noaux/PalenkaLlama1-58M-strict-L0.1-H0.1.yaml \
   2>&1 | tee /scratch/nlp_G1/slurm_out/run_H0.1.log
 
-torchrun --nproc_per_node=2 --master_port=29501 dkds-noaux.py \
+torchrun --nproc_per_node=2 --master_port=29501 dkds_noaux.py \
   --config ./config/distillation/dkds_noaux/PalenkaLlama1-58M-strict-L0.1-H0.3.yaml \
   2>&1 | tee /scratch/nlp_G1/slurm_out/run_H0.3.log
 
-torchrun --nproc_per_node=2 --master_port=29501 dkds-noaux.py \
+torchrun --nproc_per_node=2 --master_port=29501 dkds_noaux.py \
   --config ./config/distillation/dkds_noaux/PalenkaLlama1-58M-strict-L0.1-H0.5.yaml \
   2>&1 | tee /scratch/nlp_G1/slurm_out/run_H0.5.log
 
 date | tee -a /scratch/nlp_G1/slurm_outrun_H0.1.log \
     /scratch/nlp_G1/slurm_out/run_H0.3.log\
     /scratch/nlp_G1/slurm_out/run_H0.5.log
-
-date
